@@ -1,0 +1,1 @@
+package org.veary.persist.exceptions;
