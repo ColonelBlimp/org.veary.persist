@@ -41,18 +41,23 @@ import java.util.Objects;
 
 import javax.sql.DataSource;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.veary.persist.Query;
 import org.veary.persist.entity.Entity;
 import org.veary.persist.exceptions.NoResultException;
 import org.veary.persist.exceptions.NonUniqueResultException;
 import org.veary.persist.exceptions.PersistenceException;
 
+/**
+ * Concrete implementation of the {@link Query} interface.
+ *
+ * @author Marc L. Veary
+ * @since 1.0
+ */
 public final class QueryImpl implements Query {
 
-    private static final Logger LOG = LogManager.getLogger(QueryImpl.class);
     private static final int NO_GENERATED_KEY = 0;
+    private static final String SELECT_STR = "SELECT";
+    private static final String ENTITY_FACTORY_METHOD = "newInstance";
 
     private final String nativeSql;
     private final DataSource ds;
@@ -68,11 +73,12 @@ public final class QueryImpl implements Query {
      * @param nativeSql {@code String}
      */
     public QueryImpl(DataSource ds, String nativeSql) {
-        this.ds = Objects.requireNonNull(ds, "DataSource parameter is null.");
+        this.ds = Objects.requireNonNull(ds, Messages.getString("QueryImpl.error_msg_ds_null")); //$NON-NLS-1$
         this.nativeSql = Objects.requireNonNull(nativeSql,
-            "String SQL statement parameter is null.");
-        if ("".equals(this.nativeSql)) {
-            throw new IllegalArgumentException("String SQL statement must be non-empty.");
+            Messages.getString("QueryImpl.error_msg_sql_null")); //$NON-NLS-1$
+        if ("".equals(this.nativeSql)) { //$NON-NLS-1$
+            throw new IllegalArgumentException(
+                Messages.getString("QueryImpl.error_msg_sql_empty")); //$NON-NLS-1$
         }
         this.parameters = new HashMap<>();
     }
@@ -88,19 +94,19 @@ public final class QueryImpl implements Query {
     public QueryImpl(DataSource ds, String nativeSql, Class<? extends Entity> entityInterface) {
         this(ds, nativeSql);
         this.entityInterface = Objects.requireNonNull(entityInterface,
-            "Entity interface parameter is null.");
+            Messages.getString("QueryImpl.error_msg_iface_null")); //$NON-NLS-1$
     }
 
     @Override
     public Object getSingleResult() {
         if (this.internalResult == null) {
             throw new PersistenceException(
-                "Query result not set. Call Query.executeQuery() before calling Query.getSingleResult().");
+                Messages.getString("QueryImpl.error_msg_method_order_1")); //$NON-NLS-1$
         }
 
         if (this.internalResult.size() > 1) {
             throw new NonUniqueResultException(
-                "More than one result was returned from Query.getSingleResult()");
+                Messages.getString("QueryImpl.error_msg_too_many_results")); //$NON-NLS-1$
         }
 
         return getNewInstance(getStaticFactoryMethod(), this.internalResult.get(0));
@@ -114,7 +120,8 @@ public final class QueryImpl implements Query {
     @Override
     public Query setParameter(int index, Object value) {
         if (index < 1) {
-            throw new IllegalArgumentException("Query.setParameter index starts a 1.");
+            throw new IllegalArgumentException(
+                Messages.getString("QueryImpl.error_msg_invalid_index")); //$NON-NLS-1$
         }
         this.parameters.put(String.valueOf(index), value);
         return this;
@@ -122,9 +129,9 @@ public final class QueryImpl implements Query {
 
     @Override
     public Query executeQuery() {
-        if (!this.nativeSql.startsWith("SELECT")) {
+        if (!this.nativeSql.startsWith(SELECT_STR)) {
             throw new IllegalStateException(
-                "You cannot call Query.executeQuery() on this query. It is the incorrect query type.");
+                Messages.getString("QueryImpl.error_msg_incorrect_query_type1")); //$NON-NLS-1$
         }
 
         try (Connection conn = this.ds.getConnection()) {
@@ -148,9 +155,9 @@ public final class QueryImpl implements Query {
 
     @Override
     public Long executeUpdate() {
-        if (this.nativeSql.startsWith("SELECT")) {
+        if (this.nativeSql.startsWith(SELECT_STR)) {
             throw new IllegalStateException(
-                "You cannot call Query.executeUpdate() on this query. It is the incorrect query type.");
+                Messages.getString("QueryImpl.error_msg_incorrect_query_type2")); //$NON-NLS-1$
         }
 
         int result = 0;
@@ -181,16 +188,14 @@ public final class QueryImpl implements Query {
     }
 
     private Method getStaticFactoryMethod() {
-        LOG.trace("called");
         try {
-            return this.entityInterface.getDeclaredMethod("newInstance", Map.class);
+            return this.entityInterface.getDeclaredMethod(ENTITY_FACTORY_METHOD, Map.class);
         } catch (NoSuchMethodException | SecurityException e) {
             throw new PersistenceException(e);
         }
     }
 
     private Object getNewInstance(Method staticFactory, Map<String, Object> result) {
-        LOG.trace("called");
         try {
             return staticFactory.invoke(this.entityInterface, result);
         } catch (IllegalAccessException | IllegalArgumentException
@@ -206,7 +211,6 @@ public final class QueryImpl implements Query {
      * @return int
      */
     private int getGeneratedKey(Statement stmt) {
-        LOG.trace("called");
         try (ResultSet rset = stmt.getGeneratedKeys()) {
             if (rset.next()) {
                 return rset.getInt(1);
@@ -227,9 +231,8 @@ public final class QueryImpl implements Query {
      * @throws NoResultException if this {@code Query} did not return any results
      */
     private List<Map<String, Object>> processResultSet(ResultSet rset) throws SQLException {
-        LOG.trace("called");
         if (!rset.isBeforeFirst()) {
-            throw new NoResultException("This Query did not return any results.");
+            throw new NoResultException(Messages.getString("QueryImpl.error_msg_no_results")); //$NON-NLS-1$
         }
 
         final ResultSetMetaData md = rset.getMetaData();
