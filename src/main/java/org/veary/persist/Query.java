@@ -24,16 +24,22 @@
 
 package org.veary.persist;
 
+import java.sql.PreparedStatement;
 import java.util.List;
-
-import org.veary.persist.entity.Entity;
 
 public interface Query {
 
     Object getSingleResult();
 
-    List<? extends Entity> getResultList();
+    List<Object> getResultList();
 
+    /**
+     * Set a parameter Object for a {@link PreparedStatement}.
+     *
+     * @param index the index starts at 1 (one)
+     * @param value {@code Object}
+     * @return the current {@link Query} object
+     */
     Query setParameter(int index, Object value);
 
     Query executeQuery();

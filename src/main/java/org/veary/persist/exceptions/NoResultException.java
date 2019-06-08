@@ -29,15 +29,15 @@ public class NoResultException extends PersistenceException {
     private static final long serialVersionUID = 2557323154301619543L;
 
     /**
-     * Constructs a new <code>NoResultException</code> exception with
-     * <code>null</code> as its detail message.
+     * Constructs a new {@code NoResultException} exception with {@code null} as its
+     * detail message.
      */
     public NoResultException() {
         super();
     }
 
     /**
-     * Constructs a new <code>NoResultException</code> exception with the specified
+     * Constructs a new {@code NoResultException} exception with the specified
      * detail message.
      *
      * @param message the detail message.

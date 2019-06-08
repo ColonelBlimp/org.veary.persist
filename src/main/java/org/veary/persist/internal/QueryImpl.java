@@ -46,11 +46,13 @@ import org.apache.logging.log4j.Logger;
 import org.veary.persist.Query;
 import org.veary.persist.entity.Entity;
 import org.veary.persist.exceptions.NoResultException;
+import org.veary.persist.exceptions.NonUniqueResultException;
 import org.veary.persist.exceptions.PersistenceException;
 
 public final class QueryImpl implements Query {
 
     private static final Logger LOG = LogManager.getLogger(QueryImpl.class);
+    private static final int NO_GENERATED_KEY = 0;
 
     private final String nativeSql;
     private final DataSource ds;
@@ -59,16 +61,30 @@ public final class QueryImpl implements Query {
     private Class<? extends Entity> entityInterface;
     private List<Map<String, Object>> internalResult;
 
+    /**
+     * Constructor.
+     *
+     * @param ds        {@link DataSource}
+     * @param nativeSql {@code String}
+     */
     public QueryImpl(DataSource ds, String nativeSql) {
         this.ds = Objects.requireNonNull(ds, "DataSource parameter is null.");
         this.nativeSql = Objects.requireNonNull(nativeSql,
-            "Native SQL statement parameter is null.");
+            "String SQL statement parameter is null.");
         if ("".equals(this.nativeSql)) {
-            throw new IllegalArgumentException("Native SQL statement must be non-empty.");
+            throw new IllegalArgumentException("String SQL statement must be non-empty.");
         }
         this.parameters = new HashMap<>();
     }
 
+    /**
+     * Constructor.
+     *
+     * @param ds              {@link DataSource}
+     * @param nativeSql       {@code String}
+     * @param entityInterface <code>Class&lt;? extends</code>
+     *                        {@link Entity}{@code >}
+     */
     public QueryImpl(DataSource ds, String nativeSql, Class<? extends Entity> entityInterface) {
         this(ds, nativeSql);
         this.entityInterface = Objects.requireNonNull(entityInterface,
@@ -77,18 +93,28 @@ public final class QueryImpl implements Query {
 
     @Override
     public Object getSingleResult() {
+        if (this.internalResult == null) {
+            throw new PersistenceException(
+                "Query result not set. Call Query.executeQuery() before calling Query.getSingleResult().");
+        }
+
+        if (this.internalResult.size() > 1) {
+            throw new NonUniqueResultException(
+                "More than one result was returned from Query.getSingleResult()");
+        }
+
         return getNewInstance(getStaticFactoryMethod(), this.internalResult.get(0));
     }
 
     @Override
-    public List<? extends Entity> getResultList() {
+    public List<Object> getResultList() {
         return Collections.emptyList();
     }
 
     @Override
     public Query setParameter(int index, Object value) {
         if (index < 1) {
-            throw new IllegalArgumentException("Query parameter index starts a 1.");
+            throw new IllegalArgumentException("Query.setParameter index starts a 1.");
         }
         this.parameters.put(String.valueOf(index), value);
         return this;
@@ -97,7 +123,8 @@ public final class QueryImpl implements Query {
     @Override
     public Query executeQuery() {
         if (!this.nativeSql.startsWith("SELECT")) {
-            throw new IllegalArgumentException("");
+            throw new IllegalStateException(
+                "You cannot call Query.executeQuery() on this query. It is the incorrect query type.");
         }
 
         try (Connection conn = this.ds.getConnection()) {
@@ -122,7 +149,8 @@ public final class QueryImpl implements Query {
     @Override
     public Long executeUpdate() {
         if (this.nativeSql.startsWith("SELECT")) {
-            throw new IllegalArgumentException("");
+            throw new IllegalStateException(
+                "You cannot call Query.executeUpdate() on this query. It is the incorrect query type.");
         }
 
         int result = 0;
@@ -135,8 +163,9 @@ public final class QueryImpl implements Query {
                 }
 
                 result = stmt.executeUpdate();
-                if (stmt.getGeneratedKeys() != null) {
-                    result = getGeneratedKey(stmt);
+                int key = getGeneratedKey(stmt);
+                if (key > NO_GENERATED_KEY) {
+                    result = key;
                 }
             }
         } catch (SQLException e) {
@@ -170,13 +199,19 @@ public final class QueryImpl implements Query {
         }
     }
 
+    /**
+     * Return the generated key (if there is one), otherwise return 0 (zero).
+     *
+     * @param stmt {@link Statement}
+     * @return int
+     */
     private int getGeneratedKey(Statement stmt) {
         LOG.trace("called");
         try (ResultSet rset = stmt.getGeneratedKeys()) {
-            if (rset != null && rset.next()) {
+            if (rset.next()) {
                 return rset.getInt(1);
             }
-            return 0;
+            return NO_GENERATED_KEY;
         } catch (SQLException e) {
             throw new PersistenceException(e);
         }
@@ -186,15 +221,15 @@ public final class QueryImpl implements Query {
      * Process the given {@link ResultSet} into an
      * {@code List<Map<String, Object>>}.
      *
-     * @param rset the {@code ResultSet}
-     * @return a {@code List<Map<String, Object>>}. Cannot be {@code null}, but can
-     *         be empty.
-     * @throws SQLException if there was a error
+     * @param rset {@code ResultSet}
+     * @return a {@code List<Map<String, Object>>}. Cannot return {@code null}.
+     * @throws SQLException      if there is an underlying SQL problem.
+     * @throws NoResultException if this {@code Query} did not return any results
      */
     private List<Map<String, Object>> processResultSet(ResultSet rset) throws SQLException {
         LOG.trace("called");
         if (!rset.isBeforeFirst()) {
-            throw new NoResultException();
+            throw new NoResultException("This Query did not return any results.");
         }
 
         final ResultSetMetaData md = rset.getMetaData();
