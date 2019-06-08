@@ -73,15 +73,16 @@ public final class QueryImpl implements Query {
 	 * @param ds {@link DataSource}
 	 * @param builder {@link QueryBuilder}
 	 */
-	public QueryImpl(DataSource ds, QueryBuilder builder) {
-		this.ds = Objects.requireNonNull(ds, Messages.getString("QueryImpl.error_msg_ds_null")); //$NON-NLS-1$
-		this.builder = Objects
-			.requireNonNull(builder, Messages.getString("QueryImpl.error_msg_builder_null")); //$NON-NLS-1$
+	public QueryImpl(DataSource ds,	QueryBuilder builder) {
+		this.ds = Objects.requireNonNull(ds,
+			Messages.getString("QueryImpl.error_msg_ds_null")); //$NON-NLS-1$
+		this.builder = Objects.requireNonNull(builder,
+			Messages.getString("QueryImpl.error_msg_builder_null")); //$NON-NLS-1$
 		if ("".equals(this.builder.toString())) { //$NON-NLS-1$
 			throw new IllegalArgumentException(
 				Messages.getString("QueryImpl.error_msg_sql_empty")); //$NON-NLS-1$
 		}
-		this.parameters = new HashMap<>();
+		parameters = new HashMap<>();
 	}
 
 	/**
@@ -91,34 +92,31 @@ public final class QueryImpl implements Query {
 	 * @param builder {@link QueryBuilder}
 	 * @param entityInterface <code>Class&lt;? extends</code> {@link Entity}{@code >}
 	 */
-	public QueryImpl(
-		DataSource ds,
-		QueryBuilder builder,
+	public QueryImpl(DataSource ds,	QueryBuilder builder,
 		Class<? extends Entity> entityInterface) {
 		this(ds, builder);
-		this.entityInterface = Objects
-			.requireNonNull(
-				entityInterface,
-				Messages.getString("QueryImpl.error_msg_iface_null")); //$NON-NLS-1$
+		this.entityInterface = Objects.requireNonNull(entityInterface,
+			Messages.getString("QueryImpl.error_msg_iface_null")); //$NON-NLS-1$
 	}
 
 	@Override
 	public Object getSingleResult() {
-		if (this.internalResult == null) {
+		if (internalResult == null) {
 			throw new PersistenceException(
 				Messages.getString("QueryImpl.error_msg_method_order_1")); //$NON-NLS-1$
 		}
 
-		if (this.internalResult.size() > 1) {
+		if (internalResult.size() > 1) {
 			throw new NonUniqueResultException(
 				Messages.getString("QueryImpl.error_msg_too_many_results")); //$NON-NLS-1$
 		}
 
-		return getNewInstance(getStaticFactoryMethod(), this.internalResult.get(0));
+		return getNewInstance(getStaticFactoryMethod(),
+			internalResult.get(0));
 	}
 
 	@Override
-	public List<Object> getResultList() {
+	public List<Object>	getResultList() {
 		return Collections.emptyList();
 	}
 
@@ -128,29 +126,27 @@ public final class QueryImpl implements Query {
 			throw new IllegalArgumentException(
 				Messages.getString("QueryImpl.error_msg_invalid_index")); //$NON-NLS-1$
 		}
-		this.parameters.put(String.valueOf(index), value);
+		parameters.put(String.valueOf(index), value);
 		return this;
 	}
 
 	@Override
 	public Query executeQuery() {
-		if (!this.builder.toString().startsWith(SELECT_STR)) {
+		if (!builder.toString().startsWith(SELECT_STR)) {
 			throw new IllegalStateException(
 				Messages.getString("QueryImpl.error_msg_incorrect_query_type1")); //$NON-NLS-1$
 		}
 
-		try (Connection conn = this.ds.getConnection()) {
-			try (PreparedStatement stmt = conn
-				.prepareStatement(
-					this.builder.toString(),
-					PreparedStatement.RETURN_GENERATED_KEYS)) {
+		try (Connection conn = ds.getConnection()) {
+			try (PreparedStatement stmt = conn.prepareStatement(builder.toString(),
+				PreparedStatement.RETURN_GENERATED_KEYS)) {
 
-				for (Map.Entry<String, Object> param : this.parameters.entrySet()) {
-					stmt.setObject(Integer.valueOf(param.getKey()), param.getValue());
+				for (Map.Entry<String, Object> param : parameters.entrySet()) {
+					stmt.setObject(Integer.valueOf(param.getKey()),	param.getValue());
 				}
 
 				try (ResultSet rset = stmt.executeQuery()) {
-					this.internalResult = processResultSet(rset);
+					internalResult = processResultSet(rset);
 				}
 			}
 		} catch (SQLException e) {
@@ -162,20 +158,18 @@ public final class QueryImpl implements Query {
 
 	@Override
 	public Long executeUpdate() {
-		if (this.builder.toString().startsWith(SELECT_STR)) {
+		if (builder.toString().startsWith(SELECT_STR)) {
 			throw new IllegalStateException(
 				Messages.getString("QueryImpl.error_msg_incorrect_query_type2")); //$NON-NLS-1$
 		}
 
 		int result = 0;
-		try (Connection conn = this.ds.getConnection()) {
-			try (PreparedStatement stmt = conn
-				.prepareStatement(
-					this.builder.toString(),
-					PreparedStatement.RETURN_GENERATED_KEYS)) {
+		try (Connection conn = ds.getConnection()) {
+			try (PreparedStatement stmt = conn.prepareStatement(builder.toString(),
+				PreparedStatement.RETURN_GENERATED_KEYS)) {
 
-				for (Map.Entry<String, Object> param : this.parameters.entrySet()) {
-					stmt.setObject(Integer.valueOf(param.getKey()), param.getValue());
+				for (Map.Entry<String, Object> param : parameters.entrySet()) {
+					stmt.setObject(Integer.valueOf(param.getKey()),	param.getValue());
 				}
 
 				result = stmt.executeUpdate();
@@ -193,12 +187,12 @@ public final class QueryImpl implements Query {
 
 	@Override
 	public Query startTransaction() {
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	private Method getStaticFactoryMethod() {
 		try {
-			return this.entityInterface.getDeclaredMethod(ENTITY_FACTORY_METHOD, Map.class);
+			return entityInterface.getDeclaredMethod(ENTITY_FACTORY_METHOD,	Map.class);
 		} catch (NoSuchMethodException | SecurityException e) {
 			throw new PersistenceException(e);
 		}
@@ -206,7 +200,7 @@ public final class QueryImpl implements Query {
 
 	private Object getNewInstance(Method staticFactory, Map<String, Object> result) {
 		try {
-			return staticFactory.invoke(this.entityInterface, result);
+			return staticFactory.invoke(entityInterface, result);
 		} catch (IllegalAccessException | IllegalArgumentException
 			| InvocationTargetException e) {
 			throw new PersistenceException(e);
@@ -238,9 +232,11 @@ public final class QueryImpl implements Query {
 	 * @throws SQLException if there is an underlying SQL problem.
 	 * @throws NoResultException if this {@code Query} did not return any results
 	 */
-	private List<Map<String, Object>> processResultSet(ResultSet rset) throws SQLException {
+	private List<Map<String, Object>>
+		processResultSet(ResultSet rset) throws SQLException {
 		if (!rset.isBeforeFirst()) {
-			throw new NoResultException(Messages.getString("QueryImpl.error_msg_no_results")); //$NON-NLS-1$
+			throw new NoResultException(
+				Messages.getString("QueryImpl.error_msg_no_results")); //$NON-NLS-1$
 		}
 
 		final ResultSetMetaData md = rset.getMetaData();
