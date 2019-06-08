@@ -26,8 +26,6 @@ package org.veary.persist.exceptions;
 
 public class PersistenceException extends RuntimeException {
 
-    private static final long serialVersionUID = 7325682565296397537L;
-
     /**
      * Constructs a new <code>PersistenceException</code> exception with
      * <code>null</code> as its detail message.
@@ -36,15 +34,34 @@ public class PersistenceException extends RuntimeException {
         super();
     }
 
-    public PersistenceException(String message, Throwable exception) {
-        super(message, exception);
-    }
-
+    /**
+     * Constructs a new <code>PersistenceException</code> exception with the
+     * specified detail message.
+     * 
+     * @param message the detail message.
+     */
     public PersistenceException(String message) {
         super(message);
     }
 
-    public PersistenceException(Throwable exception) {
-        super(exception);
+    /**
+     * Constructs a new <code>PersistenceException</code> exception with the
+     * specified detail message and cause.
+     * 
+     * @param message the detail message.
+     * @param cause   the cause.
+     */
+    public PersistenceException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    /**
+     * Constructs a new <code>PersistenceException</code> exception with the
+     * specified cause.
+     * 
+     * @param cause the cause.
+     */
+    public PersistenceException(Throwable cause) {
+        super(cause);
     }
 }

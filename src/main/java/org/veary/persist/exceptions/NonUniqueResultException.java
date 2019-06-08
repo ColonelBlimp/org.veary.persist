@@ -24,22 +24,20 @@
 
 package org.veary.persist.exceptions;
 
-public final class NonUniqueResultException extends PersistenceException {
-
-//    private static final long serialVersionUID = -2582828348289492179L;
+public class NonUniqueResultException extends PersistenceException {
 
     /**
-     * Constructs a new {@code NonUniqueResultException} exception with {@code null}
-     * as its detail message.
+     * Constructs a new <code>NonUniqueResultException</code> exception with
+     * <code>null</code> as its detail message.
      */
     public NonUniqueResultException() {
         super();
     }
 
     /**
-     * Constructs a new {@code NonUniqueResultException} exception with the
+     * Constructs a new <code>NonUniqueResultException</code> exception with the
      * specified detail message.
-     *
+     * 
      * @param message the detail message.
      */
     public NonUniqueResultException(String message) {
