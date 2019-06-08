@@ -28,10 +28,11 @@ import java.io.File;
 import java.util.Map;
 
 import org.testng.Assert;
-import org.testng.annotations.BeforeTest;
+import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 import org.veary.persist.PersistenceManager;
 import org.veary.persist.entity.Entity;
+import org.veary.persist.exceptions.NoResultException;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -43,7 +44,7 @@ public class PeristenceManagerTest {
     private TomcatJNDI tomcatJndi;
     private Injector injector;
 
-    @BeforeTest
+    @BeforeSuite
     public void setUp() {
         final File contextXml = new File("src/test/resources/context.xml");
         this.tomcatJndi = new TomcatJNDI();
@@ -63,7 +64,7 @@ public class PeristenceManagerTest {
     }
 
     @Test(dependsOnMethods = { "createTable" })
-    public void createAccountRow() {
+    public void createAndReadAccount() {
         PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
         Assert.assertNotNull(manager);
 
@@ -71,6 +72,29 @@ public class PeristenceManagerTest {
             .createQuery("INSERT INTO debs.account(name) VALUES(?)", Account.class)
             .setParameter(1, "CASH")
             .executeUpdate();
+        Assert.assertNotNull(result);
+        Assert.assertEquals(result, Long.valueOf(1));
+
+        Account account = (Account) manager
+            .createQuery("SELECT * FROM debs.account WHERE id=?", Account.class)
+            .setParameter(1, result)
+            .executeQuery()
+            .getSingleResult();
+
+        Assert.assertNotNull(account);
+        Assert.assertEquals(account.getName(), "CASH");
+    }
+
+    @Test(dependsOnMethods = { "createTable" }, expectedExceptions = NoResultException.class)
+    public void noResult() {
+        PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
+        Assert.assertNotNull(manager);
+
+        manager
+            .createQuery("SELECT * FROM debs.account WHERE id=?", Account.class)
+            .setParameter(1, Long.valueOf(2))
+            .executeQuery()
+            .getSingleResult();
     }
 
     public interface Account extends Entity {
@@ -82,12 +106,12 @@ public class PeristenceManagerTest {
 
                 @Override
                 public String getName() {
-                    return (String) dataMap.get("name");
+                    return (String) dataMap.get("NAME");
                 }
 
                 @Override
                 public Long getId() {
-                    return (Long) dataMap.get("id");
+                    return (Long) dataMap.get("ID");
                 }
             };
         }

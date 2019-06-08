@@ -45,6 +45,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.veary.persist.Query;
 import org.veary.persist.entity.Entity;
+import org.veary.persist.exceptions.NoResultException;
 import org.veary.persist.exceptions.PersistenceException;
 
 public final class QueryImpl implements Query {
@@ -169,11 +170,6 @@ public final class QueryImpl implements Query {
         }
     }
 
-    private List<Map<String, Object>> processResultSet(ResultSet rset) {
-        LOG.trace("called");
-        return Collections.emptyList();
-    }
-
     private int getGeneratedKey(Statement stmt) {
         LOG.trace("called");
         try (ResultSet rset = stmt.getGeneratedKeys()) {
@@ -195,8 +191,12 @@ public final class QueryImpl implements Query {
      *         be empty.
      * @throws SQLException if there was a error
      */
-    private List<Map<String, Object>> resultSetToList(ResultSet rset) throws SQLException {
+    private List<Map<String, Object>> processResultSet(ResultSet rset) throws SQLException {
         LOG.trace("called");
+        if (!rset.isBeforeFirst()) {
+            throw new NoResultException();
+        }
+
         final ResultSetMetaData md = rset.getMetaData();
         final List<Map<String, Object>> list = new ArrayList<>();
 
@@ -204,7 +204,7 @@ public final class QueryImpl implements Query {
         while (rset.next()) {
             final Map<String, Object> row = new HashMap<>();
             for (int i = 1; i <= columns; i++) {
-                row.put(md.getColumnName(i), rset.getObject(i));
+                row.put(md.getColumnName(i).toUpperCase(), rset.getObject(i));
             }
             list.add(row);
         }
