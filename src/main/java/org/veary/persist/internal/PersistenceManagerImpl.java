@@ -48,4 +48,9 @@ public final class PersistenceManagerImpl implements PersistenceManager {
     public Query createQuery(String nativeSql, Class<? extends Entity> entityInterface) {
         return new QueryImpl(this.dataSource, nativeSql, entityInterface);
     }
+
+	@Override
+	public Query createQuery(String nativeSql) {
+		return new QueryImpl(this.dataSource, nativeSql);
+	}
 }

@@ -28,5 +28,7 @@ import org.veary.persist.entity.Entity;
 
 public interface PersistenceManager {
 
+	Query createQuery(String nativeSql);
+	
     Query createQuery(String nativeSql, Class<? extends Entity> entityInterface);
 }

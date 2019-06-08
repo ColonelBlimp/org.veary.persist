@@ -29,7 +29,10 @@ import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -38,26 +41,37 @@ import java.util.Objects;
 
 import javax.sql.DataSource;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.veary.persist.Query;
 import org.veary.persist.entity.Entity;
 import org.veary.persist.exceptions.PersistenceException;
 
 public final class QueryImpl implements Query {
 
+    private static final Logger LOG = LogManager.getLogger(QueryImpl.class);
+
     private final String nativeSql;
-    private final Class<? extends Entity> entityInterface;
     private final DataSource ds;
     private final Map<String, Object> parameters;
 
+    private Class<? extends Entity> entityInterface;
     private List<Map<String, Object>> internalResult;
 
-    public QueryImpl(DataSource ds, String nativeSql, Class<? extends Entity> entityInterface) {
+    public QueryImpl(DataSource ds, String nativeSql) {
         this.ds = Objects.requireNonNull(ds, "DataSource parameter is null.");
         this.nativeSql = Objects.requireNonNull(nativeSql,
             "Native SQL statement parameter is null.");
+        if ("".equals(this.nativeSql)) {
+            throw new IllegalArgumentException("Native SQL statement must be non-empty.");
+        }
+        this.parameters = new HashMap<>();
+    }
+
+    public QueryImpl(DataSource ds, String nativeSql, Class<? extends Entity> entityInterface) {
+        this(ds, nativeSql);
         this.entityInterface = Objects.requireNonNull(entityInterface,
             "Entity interface parameter is null.");
-        this.parameters = new HashMap<>();
     }
 
     @Override
@@ -91,7 +105,7 @@ public final class QueryImpl implements Query {
                 int index = 1;
 
                 for (Map.Entry<String, Object> param : this.parameters.entrySet()) {
-                    stmt.setObject(index++, param);
+                    stmt.setObject(Integer.valueOf(param.getKey()), param.getValue());
                 }
 
                 try (ResultSet rset = stmt.executeQuery()) {
@@ -106,11 +120,30 @@ public final class QueryImpl implements Query {
     }
 
     @Override
-    public int executeUpdate() {
+    public Long executeUpdate() {
         if (this.nativeSql.startsWith("SELECT")) {
             throw new IllegalArgumentException("");
         }
-        return 0;
+
+        int result = -1;
+        try (Connection conn = this.ds.getConnection()) {
+            try (PreparedStatement stmt = conn
+                .prepareStatement(this.nativeSql)) {
+
+                for (Map.Entry<String, Object> param : this.parameters.entrySet()) {
+                    stmt.setObject(Integer.valueOf(param.getKey()), param.getValue());
+                }
+
+                result = stmt.executeUpdate();
+                if (stmt.getResultSet() != null) {
+                    result = getGeneratedKey(stmt);
+                }
+            }
+        } catch (SQLException e) {
+            throw new PersistenceException(e);
+        }
+
+        return Long.valueOf(result);
     }
 
     @Override
@@ -119,6 +152,7 @@ public final class QueryImpl implements Query {
     }
 
     private Method getStaticFactoryMethod() {
+        LOG.trace("called");
         try {
             return this.entityInterface.getDeclaredMethod("newInstance", Map.class);
         } catch (NoSuchMethodException | SecurityException e) {
@@ -127,8 +161,9 @@ public final class QueryImpl implements Query {
     }
 
     private Object getNewInstance(Method staticFactory, Map<String, Object> result) {
+        LOG.trace("called");
         try {
-            return staticFactory.invoke(entityInterface, result);
+            return staticFactory.invoke(this.entityInterface, result);
         } catch (IllegalAccessException | IllegalArgumentException
             | InvocationTargetException e) {
             throw new PersistenceException(e);
@@ -136,6 +171,47 @@ public final class QueryImpl implements Query {
     }
 
     private List<Map<String, Object>> processResultSet(ResultSet rset) {
+        LOG.trace("called");
         return Collections.emptyList();
+    }
+
+    private int getGeneratedKey(Statement stmt) {
+        LOG.trace("called");
+        try (ResultSet rset = stmt.getGeneratedKeys()) {
+            if (rset != null) {
+                List<Map<String, Object>> list = resultSetToList(rset);
+                Map<String, Object> map = list.get(0);
+                LOG.trace("MAP: {}", map.toString());
+            }
+            return 0;
+        } catch (SQLException e) {
+            throw new PersistenceException(e);
+        }
+    }
+
+    /**
+     * Process the given {@link ResultSet} into an
+     * {@code List<Map<String, Object>>}.
+     *
+     * @param rset the {@code ResultSet}
+     * @return a {@code List<Map<String, Object>>}. Cannot be {@code null}, but can
+     *         be empty.
+     * @throws SQLException if there was a error
+     */
+    private List<Map<String, Object>> resultSetToList(ResultSet rset) throws SQLException {
+        LOG.trace("called");
+        final ResultSetMetaData md = rset.getMetaData();
+        final List<Map<String, Object>> list = new ArrayList<>();
+
+        final int columns = md.getColumnCount();
+        while (rset.next()) {
+            final Map<String, Object> row = new HashMap<>();
+            for (int i = 1; i <= columns; i++) {
+                row.put(md.getColumnName(i), rset.getObject(i));
+            }
+            list.add(row);
+        }
+
+        return list;
     }
 }

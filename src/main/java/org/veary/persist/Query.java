@@ -39,11 +39,12 @@ public interface Query {
     Query executeQuery();
 
     /**
-     * Execute an UPDATE or DELETE statement.
+     * Execute an INSERT, UPDATE or DELETE statement.
      *
-     * @return the number of entries updated or deleted
+     * @return the number of entries updated or deleted, or the generated ID if
+     *         INSERT
      */
-    int executeUpdate();
+    Long executeUpdate();
 
     Query startTransaction();
 }
