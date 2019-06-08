@@ -24,9 +24,9 @@
 
 package org.veary.persist.exceptions;
 
-public class NoResultException extends PersistenceException {
+public final class NoResultException extends PersistenceException {
 
-    private static final long serialVersionUID = 2557323154301619543L;
+//    private static final long serialVersionUID = 2557323154301619543L;
 
     /**
      * Constructs a new {@code NoResultException} exception with {@code null} as its
