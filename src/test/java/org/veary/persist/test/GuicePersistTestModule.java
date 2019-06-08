@@ -22,28 +22,25 @@
  * SOFTWARE.
  */
 
-package org.veary.persist;
+package org.veary.persist.test;
 
-import java.util.List;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.sql.DataSource;
 
-import org.veary.persist.entity.Entity;
+import org.veary.persist.PersistenceManager;
+import org.veary.persist.internal.PersistenceManagerImpl;
 
-public interface Query {
+import com.google.inject.AbstractModule;
+import com.google.inject.jndi.JndiIntegration;
 
-    Object getSingleResult();
+public class GuicePersistTestModule extends AbstractModule {
 
-    List<? extends Entity> getResultList();
-
-    Query setParameter(int index, Object value);
-
-    Query executeQuery();
-
-    /**
-     * Execute an UPDATE or DELETE statement.
-     * 
-     * @return the number of entries updated or deleted
-     */
-    int executeUpdate();
-
-    Query startTransaction();
+    @Override
+    protected void configure() {
+        bind(Context.class).to(InitialContext.class);
+        bind(DataSource.class)
+            .toProvider(JndiIntegration.fromJndi(DataSource.class, "java:/comp/env/jdbc/pvs"));
+        bind(PersistenceManager.class).to(PersistenceManagerImpl.class);
+    }
 }

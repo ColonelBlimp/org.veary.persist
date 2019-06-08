@@ -22,28 +22,30 @@
  * SOFTWARE.
  */
 
-package org.veary.persist;
+package org.veary.persist.internal;
 
-import java.util.List;
+import javax.inject.Inject;
+import javax.sql.DataSource;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.veary.persist.PersistenceManager;
+import org.veary.persist.Query;
 import org.veary.persist.entity.Entity;
 
-public interface Query {
+public final class PersistenceManagerImpl implements PersistenceManager {
 
-    Object getSingleResult();
+    private static final Logger LOG = LogManager.getLogger(PersistenceManagerImpl.class);
 
-    List<? extends Entity> getResultList();
+    private final DataSource dataSource;
 
-    Query setParameter(int index, Object value);
+    @Inject
+    public PersistenceManagerImpl(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
 
-    Query executeQuery();
-
-    /**
-     * Execute an UPDATE or DELETE statement.
-     * 
-     * @return the number of entries updated or deleted
-     */
-    int executeUpdate();
-
-    Query startTransaction();
+    @Override
+    public Query createQuery(String nativeSql, Class<? extends Entity> entityInterface) {
+        return new QueryImpl(this.dataSource, nativeSql, entityInterface);
+    }
 }

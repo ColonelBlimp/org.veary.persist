@@ -26,9 +26,13 @@ package org.veary.persist.internal;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
+import javax.sql.DataSource;
 
 import org.veary.persist.Query;
 import org.veary.persist.entity.Entity;
@@ -36,14 +40,19 @@ import org.veary.persist.exceptions.PersistenceException;
 
 public final class QueryImpl implements Query {
 
-    private final Map<String, Object> parameters;
     private final String nativeSql;
     private final Class<? extends Entity> entityInterface;
+    private final DataSource ds;
+    private final Map<String, Object> parameters;
+
     private Map<String, Object> result;
 
-    public QueryImpl(String nativeSql, Class<? extends Entity> entityInterface) {
-        this.nativeSql = nativeSql;
-        this.entityInterface = entityInterface;
+    public QueryImpl(DataSource ds, String nativeSql, Class<? extends Entity> entityInterface) {
+        this.ds = Objects.requireNonNull(ds, "DataSource parameter is null.");
+        this.nativeSql = Objects.requireNonNull(nativeSql,
+            "Native SQL statement parameter is null.");
+        this.entityInterface = Objects.requireNonNull(entityInterface,
+            "Entity interface parameter is null.");
         this.parameters = new HashMap<>();
     }
 
@@ -54,7 +63,7 @@ public final class QueryImpl implements Query {
 
     @Override
     public List<? extends Entity> getResultList() {
-        return null;
+        return Collections.emptyList();
     }
 
     @Override
@@ -68,11 +77,18 @@ public final class QueryImpl implements Query {
 
     @Override
     public Query executeQuery() {
+        if (!this.nativeSql.startsWith("SELECT")) {
+            throw new IllegalArgumentException("");
+        }
+
         return this;
     }
 
     @Override
     public int executeUpdate() {
+        if (this.nativeSql.startsWith("SELECT")) {
+            throw new IllegalArgumentException("");
+        }
         return 0;
     }
 
@@ -91,5 +107,10 @@ public final class QueryImpl implements Query {
             | InvocationTargetException e) {
             throw new PersistenceException(e);
         }
+    }
+
+    @Override
+    public Query startTransaction() {
+        return null;
     }
 }

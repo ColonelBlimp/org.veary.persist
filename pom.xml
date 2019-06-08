@@ -250,6 +250,18 @@
       </dependency>
       <!-- Testing -->
       <dependency>
+        <groupId>com.github.h-thurow</groupId>
+        <artifactId>tomcat8jndi</artifactId>
+        <version>1.0.0</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.tomcat</groupId>
+        <artifactId>tomcat-dbcp</artifactId>
+        <version>9.0.20</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
         <groupId>org.testng</groupId>
         <artifactId>testng</artifactId>
         <version>6.14.3</version>
@@ -273,6 +285,10 @@
     </dependency>
     <dependency>
       <groupId>com.google.inject.extensions</groupId>
+      <artifactId>guice-jndi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.inject.extensions</groupId>
       <artifactId>guice-persist</artifactId>
     </dependency>
     <dependency>
@@ -282,6 +298,14 @@
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.github.h-thurow</groupId>
+      <artifactId>tomcat8jndi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.tomcat</groupId>
+      <artifactId>tomcat-dbcp</artifactId>
     </dependency>
     <dependency>
       <groupId>org.testng</groupId>
