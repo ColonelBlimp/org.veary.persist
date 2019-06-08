@@ -31,6 +31,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.veary.persist.PersistenceManager;
+import org.veary.persist.QueryBuilder;
 import org.veary.persist.entity.Entity;
 import org.veary.persist.exceptions.NoResultException;
 import org.veary.persist.exceptions.PersistenceException;
@@ -42,168 +43,176 @@ import hthurow.tomcatjndi.TomcatJNDI;
 
 public class QueryTest {
 
-    private TomcatJNDI tomcatJndi;
-    private Injector injector;
+	private TomcatJNDI tomcatJndi;
+	private Injector injector;
 
-    @BeforeClass
-    public void setUp() {
-        final File contextXml = new File("src/test/resources/context.xml");
-        this.tomcatJndi = new TomcatJNDI();
-        this.tomcatJndi.processContextXml(contextXml);
-        this.tomcatJndi.start();
-        this.injector = Guice.createInjector(new GuicePersistTestModule());
-    }
+	@BeforeClass
+	public void setUp() {
+		final File contextXml = new File("src/test/resources/context.xml");
+		this.tomcatJndi = new TomcatJNDI();
+		this.tomcatJndi.processContextXml(contextXml);
+		this.tomcatJndi.start();
+		this.injector = Guice.createInjector(new GuicePersistTestModule());
+	}
 
-    @Test
-    public void createTable() {
-        PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
-        Assert.assertNotNull(manager);
+	@Test
+	public void createTable() {
+		PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
+		Assert.assertNotNull(manager);
 
-        Assert.assertEquals(manager.createQuery(
-            "CREATE TABLE IF NOT EXISTS debs.account(id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL)")
-            .executeUpdate(), Long.valueOf(0));
-    }
+		QueryBuilder builder = QueryBuilder
+			.newInstance(
+				"CREATE TABLE IF NOT EXISTS debs.account(id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL)");
+		Assert.assertEquals(manager.createQuery(builder).executeUpdate(), Long.valueOf(0));
+	}
 
-    @Test(dependsOnMethods = { "createTable" })
-    public void createAndReadAccount() {
-        PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
-        Assert.assertNotNull(manager);
+	@Test(dependsOnMethods = { "createTable" })
+	public void createAndReadAccount() {
+		PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
+		Assert.assertNotNull(manager);
 
-        Long result = manager
-            .createQuery("INSERT INTO debs.account(name) VALUES(?)", Account.class)
-            .setParameter(1, "CASH")
-            .executeUpdate();
-        Assert.assertNotNull(result);
-        Assert.assertEquals(result, Long.valueOf(1));
+		QueryBuilder insertSql = QueryBuilder
+			.newInstance("INSERT INTO debs.account(name) VALUES(?)");
 
-        Account account = (Account) manager
-            .createQuery("SELECT * FROM debs.account WHERE id=?", Account.class)
-            .setParameter(1, result)
-            .executeQuery()
-            .getSingleResult();
+		Long result = manager
+			.createQuery(insertSql, Account.class)
+			.setParameter(1, "CASH")
+			.executeUpdate();
+		Assert.assertNotNull(result);
+		Assert.assertEquals(result, Long.valueOf(1));
 
-        Assert.assertNotNull(account);
-        Assert.assertEquals(account.getName(), "CASH");
-    }
+		QueryBuilder selectSql = QueryBuilder
+			.newInstance("SELECT * FROM debs.account WHERE id=?");
+		Account account = (Account) manager
+			.createQuery(selectSql, Account.class)
+			.setParameter(1, result)
+			.executeQuery()
+			.getSingleResult();
 
-    @Test(
-        dependsOnMethods = { "createTable" },
-        expectedExceptions = NoResultException.class)
-    public void noResultExeption() {
-        PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
-        Assert.assertNotNull(manager);
+		Assert.assertNotNull(account);
+		Assert.assertEquals(account.getName(), "CASH");
+	}
 
-        manager
-            .createQuery("SELECT * FROM debs.account WHERE id=?", Account.class)
-            .setParameter(1, Long.valueOf(2))
-            .executeQuery()
-            .getSingleResult();
-    }
+	@Test(dependsOnMethods = { "createTable" }, expectedExceptions = NoResultException.class)
+	public void noResultExeption() {
+		PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
+		Assert.assertNotNull(manager);
 
-    @Test(
-        expectedExceptions = PersistenceException.class,
-        expectedExceptionsMessageRegExp = "Query result not set. Call Query.executeQuery\\(\\) before calling Query.getSingleResult\\(\\).")
-    public void methodOrderException() {
-        PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
-        Assert.assertNotNull(manager);
+		QueryBuilder selectSql = QueryBuilder
+			.newInstance("SELECT * FROM debs.account WHERE id=?");
 
-        manager
-            .createQuery("SELECT * FROM debs.account WHERE id=?", Account.class)
-            .setParameter(1, Long.valueOf(2))
-            .getSingleResult();
-    }
+		manager
+			.createQuery(selectSql, Account.class)
+			.setParameter(1, Long.valueOf(2))
+			.executeQuery()
+			.getSingleResult();
+	}
 
-    @Test(
-        expectedExceptions = IllegalStateException.class,
-        expectedExceptionsMessageRegExp = "You cannot call Query.executeQuery\\(\\) on this query. It is the incorrect query type.")
-    public void incorrectQueryTypeInsert() {
-        PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
-        Assert.assertNotNull(manager);
+	@Test(
+		expectedExceptions = PersistenceException.class,
+		expectedExceptionsMessageRegExp = "Query result not set. Call Query.executeQuery\\(\\) before calling Query.getSingleResult\\(\\).")
+	public void methodOrderException() {
+		PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
+		Assert.assertNotNull(manager);
 
-        manager
-            .createQuery("INSERT INTO debs.account(name) VALUES(?)", Account.class)
-            .setParameter(1, "CASH")
-            .executeQuery();
-    }
+		QueryBuilder selectSql = QueryBuilder
+			.newInstance("SELECT * FROM debs.account WHERE id=?");
 
-    @Test(
-        expectedExceptions = IllegalStateException.class,
-        expectedExceptionsMessageRegExp = "You cannot call Query.executeUpdate\\(\\) on this query. It is the incorrect query type.")
-    public void incorrectQueryTypeSelect() {
-        PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
-        Assert.assertNotNull(manager);
+		manager
+			.createQuery(selectSql, Account.class)
+			.setParameter(1, Long.valueOf(2))
+			.getSingleResult();
+	}
 
-        manager
-            .createQuery("SELECT * FROM debs.account", Account.class)
-            .executeUpdate();
-    }
+	@Test(
+		expectedExceptions = IllegalStateException.class,
+		expectedExceptionsMessageRegExp = "You cannot call Query.executeQuery\\(\\) on this query. It is the incorrect query type.")
+	public void incorrectQueryTypeInsert() {
+		PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
+		Assert.assertNotNull(manager);
 
-    @Test(
-        expectedExceptions = IllegalArgumentException.class,
-        expectedExceptionsMessageRegExp = "String SQL statement must be non-empty.")
-    public void emptySqlString() {
-        PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
-        Assert.assertNotNull(manager);
+		QueryBuilder insertSql = QueryBuilder
+			.newInstance("INSERT INTO debs.account(name) VALUES(?)");
 
-        manager
-            .createQuery("", Account.class)
-            .executeUpdate();
-    }
+		manager.createQuery(insertSql, Account.class).setParameter(1, "CASH").executeQuery();
+	}
 
-    @Test(
-        expectedExceptions = IllegalArgumentException.class,
-        expectedExceptionsMessageRegExp = "Query.setParameter index starts a 1.")
-    public void illegalParameterIndexException() {
-        PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
-        Assert.assertNotNull(manager);
+	@Test(
+		expectedExceptions = IllegalStateException.class,
+		expectedExceptionsMessageRegExp = "You cannot call Query.executeUpdate\\(\\) on this query. It is the incorrect query type.")
+	public void incorrectQueryTypeSelect() {
+		PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
+		Assert.assertNotNull(manager);
 
-        manager
-            .createQuery("INSERT INTO debs.account(name) VALUES(?)", Account.class)
-            .setParameter(0, "CASH")
-            .executeUpdate();
-    }
+		QueryBuilder selectSql = QueryBuilder.newInstance("SELECT * FROM debs.account");
 
-    @Test(
-        expectedExceptions = NullPointerException.class,
-        expectedExceptionsMessageRegExp = "String SQL statement parameter is null.")
-    public void illegalParameterNullStringException() {
-        PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
-        Assert.assertNotNull(manager);
+		manager.createQuery(selectSql, Account.class).executeUpdate();
+	}
 
-        manager
-            .createQuery(null, null)
-            .executeUpdate();
-    }
+	@Test(
+		expectedExceptions = IllegalArgumentException.class,
+		expectedExceptionsMessageRegExp = "String SQL statement must be non-empty.")
+	public void emptySqlString() {
+		PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
+		Assert.assertNotNull(manager);
 
-    @Test(
-        expectedExceptions = NullPointerException.class,
-        expectedExceptionsMessageRegExp = "Entity interface parameter is null.")
-    public void illegalParameterNullIFaceException() {
-        PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
-        Assert.assertNotNull(manager);
+		QueryBuilder sql = QueryBuilder.newInstance("");
 
-        manager
-            .createQuery("SELECT * FROM account", null)
-            .executeQuery();
-    }
+		manager.createQuery(sql, Account.class).executeUpdate();
+	}
 
-    public interface Account extends Entity {
+	@Test(
+		expectedExceptions = IllegalArgumentException.class,
+		expectedExceptionsMessageRegExp = "Query.setParameter index starts a 1.")
+	public void illegalParameterIndexException() {
+		PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
+		Assert.assertNotNull(manager);
 
-        String getName();
+		QueryBuilder insertSql = QueryBuilder
+			.newInstance("INSERT INTO debs.account(name) VALUES(?)");
 
-        static Account newInstance(Map<String, Object> dataMap) {
-            return new Account() {
+		manager.createQuery(insertSql, Account.class).setParameter(0, "CASH").executeUpdate();
+	}
 
-                @Override
-                public String getName() {
-                    return (String) dataMap.get("NAME");
-                }
+	@Test(
+		expectedExceptions = NullPointerException.class,
+		expectedExceptionsMessageRegExp = "QueryBuilder parameter is null.")
+	public void illegalParameterNullStringException() {
+		PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
+		Assert.assertNotNull(manager);
 
-                @Override
-                public Long getId() {
-                    return (Long) dataMap.get("ID");
-                }
-            };
-        }
-    }
+		manager.createQuery(null, null).executeUpdate();
+	}
+
+	@Test(
+		expectedExceptions = NullPointerException.class,
+		expectedExceptionsMessageRegExp = "Entity interface parameter is null.")
+	public void illegalParameterNullIFaceException() {
+		PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
+		Assert.assertNotNull(manager);
+
+		QueryBuilder selectSql = QueryBuilder.newInstance("SELECT * FROM account");
+
+		manager.createQuery(selectSql, null).executeQuery();
+	}
+
+	public interface Account extends Entity {
+
+		String getName();
+
+		static Account newInstance(Map<String, Object> dataMap) {
+			return new Account() {
+
+				@Override
+				public String getName() {
+					return (String) dataMap.get("NAME");
+				}
+
+				@Override
+				public Long getId() {
+					return (Long) dataMap.get("ID");
+				}
+			};
+		}
+	}
 }

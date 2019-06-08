@@ -29,6 +29,7 @@ import javax.sql.DataSource;
 
 import org.veary.persist.PersistenceManager;
 import org.veary.persist.Query;
+import org.veary.persist.QueryBuilder;
 import org.veary.persist.entity.Entity;
 
 public final class PersistenceManagerImpl implements PersistenceManager {
@@ -41,12 +42,12 @@ public final class PersistenceManagerImpl implements PersistenceManager {
     }
 
     @Override
-    public Query createQuery(String nativeSql, Class<? extends Entity> entityInterface) {
-        return new QueryImpl(this.dataSource, nativeSql, entityInterface);
+    public Query createQuery(QueryBuilder builder, Class<? extends Entity> entityInterface) {
+        return new QueryImpl(this.dataSource, builder, entityInterface);
     }
 
     @Override
-    public Query createQuery(String nativeSql) {
-        return new QueryImpl(this.dataSource, nativeSql);
+    public Query createQuery(QueryBuilder builder) {
+        return new QueryImpl(this.dataSource, builder);
     }
 }

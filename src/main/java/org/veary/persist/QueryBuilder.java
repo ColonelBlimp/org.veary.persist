@@ -22,27 +22,33 @@
  * SOFTWARE.
  */
 
-package org.veary.persist.exceptions;
+package org.veary.persist;
 
-public final class NoResultException extends PersistenceException {
+/**
+ * Currently, the prupose of this Interface is as a variable binding mechanism for SQL
+ * statements.
+ *
+ * <p>
+ * In the future, this could be expanded to provide a basic query building framework.
+ *
+ * @author Marc L. Veary
+ * @since 1.0
+ */
+public interface QueryBuilder {
 
-    private static final long serialVersionUID = 7974001994780097404L;
+	/**
+	 * Static factory method.
+	 *
+	 * @param nativeSql {@code String}
+	 * @return {@code QueryBuilder} instance
+	 */
+	static QueryBuilder newInstance(String nativeSql) {
+		return new QueryBuilder() {
 
-    /**
-     * Constructs a new {@code NoResultException} exception with {@code null} as its
-     * detail message.
-     */
-    public NoResultException() {
-        super();
-    }
-
-    /**
-     * Constructs a new {@code NoResultException} exception with the specified
-     * detail message.
-     *
-     * @param message the detail message.
-     */
-    public NoResultException(String message) {
-        super(message);
-    }
+			@Override
+			public final String toString() {
+				return nativeSql;
+			}
+		};
+	}
 }
