@@ -53,14 +53,14 @@ public class PeristenceManagerTest {
     }
 
     @Test
-    public void createManager() {
+    public void createTable() {
 
         PersistenceManager manager = this.injector.getInstance(PersistenceManager.class);
         Assert.assertNotNull(manager);
 
-        Account account = (Account) manager
-            .createQuery("SELECT * FROM account WHERE name=?", Account.class)
-            .setParameter(1, "CASH").executeQuery().getSingleResult();
+        Account account = (Account) manager.createQuery(
+            "CREATE TABLE IF NOT EXISTS debs.account(id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, name TEXT NOT NULL UNIQUE, description TEXT, type INTEGER NOT NULL)",
+            Account.class).setParameter(1, "CASH").executeQuery().getSingleResult();
         Assert.assertNotNull(account);
 
         /**

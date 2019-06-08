@@ -26,6 +26,10 @@ package org.veary.persist.internal;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +49,7 @@ public final class QueryImpl implements Query {
     private final DataSource ds;
     private final Map<String, Object> parameters;
 
-    private Map<String, Object> result;
+    private List<Map<String, Object>> internalResult;
 
     public QueryImpl(DataSource ds, String nativeSql, Class<? extends Entity> entityInterface) {
         this.ds = Objects.requireNonNull(ds, "DataSource parameter is null.");
@@ -58,7 +62,7 @@ public final class QueryImpl implements Query {
 
     @Override
     public Object getSingleResult() {
-        return getNewInstance(getStaticFactoryMethod(), this.result);
+        return getNewInstance(getStaticFactoryMethod(), this.internalResult.get(0));
     }
 
     @Override
@@ -81,6 +85,23 @@ public final class QueryImpl implements Query {
             throw new IllegalArgumentException("");
         }
 
+        try (Connection conn = this.ds.getConnection()) {
+            try (PreparedStatement stmt = conn.prepareStatement(this.nativeSql,
+                PreparedStatement.RETURN_GENERATED_KEYS)) {
+                int index = 1;
+
+                for (Map.Entry<String, Object> param : this.parameters.entrySet()) {
+                    stmt.setObject(index++, param);
+                }
+
+                try (ResultSet rset = stmt.executeQuery()) {
+                    this.internalResult = processResultSet(rset);
+                }
+            }
+        } catch (SQLException e) {
+            throw new PersistenceException(e);
+        }
+
         return this;
     }
 
@@ -90,6 +111,11 @@ public final class QueryImpl implements Query {
             throw new IllegalArgumentException("");
         }
         return 0;
+    }
+
+    @Override
+    public Query startTransaction() {
+        return null;
     }
 
     private Method getStaticFactoryMethod() {
@@ -109,8 +135,7 @@ public final class QueryImpl implements Query {
         }
     }
 
-    @Override
-    public Query startTransaction() {
-        return null;
+    private List<Map<String, Object>> processResultSet(ResultSet rset) {
+        return Collections.emptyList();
     }
 }

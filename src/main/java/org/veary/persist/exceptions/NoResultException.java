@@ -22,28 +22,27 @@
  * SOFTWARE.
  */
 
-package org.veary.persist;
+package org.veary.persist.exceptions;
 
-import java.util.List;
+public class NoResultException extends PersistenceException {
 
-import org.veary.persist.entity.Entity;
-
-public interface Query {
-
-    Object getSingleResult();
-
-    List<? extends Entity> getResultList();
-
-    Query setParameter(int index, Object value);
-
-    Query executeQuery();
+    private static final long serialVersionUID = 2557323154301619543L;
 
     /**
-     * Execute an UPDATE or DELETE statement.
-     *
-     * @return the number of entries updated or deleted
+     * Constructs a new <code>NoResultException</code> exception with
+     * <code>null</code> as its detail message.
      */
-    int executeUpdate();
+    public NoResultException() {
+        super();
+    }
 
-    Query startTransaction();
+    /**
+     * Constructs a new <code>NoResultException</code> exception with the specified
+     * detail message.
+     *
+     * @param message the detail message.
+     */
+    public NoResultException(String message) {
+        super(message);
+    }
 }
