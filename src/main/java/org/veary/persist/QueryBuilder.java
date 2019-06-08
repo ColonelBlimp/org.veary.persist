@@ -35,18 +35,18 @@ package org.veary.persist;
  */
 public interface QueryBuilder {
 
-	/**
-	 * Static factory method.
-	 *
-	 * @param nativeSql {@code String}
-	 * @return {@code QueryBuilder} instance
-	 */
-	static QueryBuilder newInstance(String nativeSql) {
-		return new QueryBuilder() {
-			@Override
-			public final String toString() {
-				return nativeSql;
-			}
-		};
-	}
+    /**
+     * Static factory method.
+     *
+     * @param nativeSql {@code String}
+     * @return {@code QueryBuilder} instance
+     */
+    static QueryBuilder newInstance(String nativeSql) {
+        return new QueryBuilder() {
+            @Override
+            public final String toString() {
+                return nativeSql;
+            }
+        };
+    }
 }
