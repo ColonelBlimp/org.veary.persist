@@ -27,15 +27,11 @@ package org.veary.persist.internal;
 import javax.inject.Inject;
 import javax.sql.DataSource;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.veary.persist.PersistenceManager;
 import org.veary.persist.Query;
 import org.veary.persist.entity.Entity;
 
 public final class PersistenceManagerImpl implements PersistenceManager {
-
-    private static final Logger LOG = LogManager.getLogger(PersistenceManagerImpl.class);
 
     private final DataSource dataSource;
 
@@ -49,8 +45,8 @@ public final class PersistenceManagerImpl implements PersistenceManager {
         return new QueryImpl(this.dataSource, nativeSql, entityInterface);
     }
 
-	@Override
-	public Query createQuery(String nativeSql) {
-		return new QueryImpl(this.dataSource, nativeSql);
-	}
+    @Override
+    public Query createQuery(String nativeSql) {
+        return new QueryImpl(this.dataSource, nativeSql);
+    }
 }

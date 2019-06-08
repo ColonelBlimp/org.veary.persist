@@ -87,7 +87,7 @@ public final class QueryImpl implements Query {
     @Override
     public Query setParameter(int index, Object value) {
         if (index < 1) {
-            throw new IllegalArgumentException("Query parameter index starts a 1");
+            throw new IllegalArgumentException("Query parameter index starts a 1.");
         }
         this.parameters.put(String.valueOf(index), value);
         return this;
@@ -102,7 +102,6 @@ public final class QueryImpl implements Query {
         try (Connection conn = this.ds.getConnection()) {
             try (PreparedStatement stmt = conn.prepareStatement(this.nativeSql,
                 PreparedStatement.RETURN_GENERATED_KEYS)) {
-                int index = 1;
 
                 for (Map.Entry<String, Object> param : this.parameters.entrySet()) {
                     stmt.setObject(Integer.valueOf(param.getKey()), param.getValue());
@@ -125,17 +124,17 @@ public final class QueryImpl implements Query {
             throw new IllegalArgumentException("");
         }
 
-        int result = -1;
+        int result = 0;
         try (Connection conn = this.ds.getConnection()) {
             try (PreparedStatement stmt = conn
-                .prepareStatement(this.nativeSql)) {
+                .prepareStatement(this.nativeSql, PreparedStatement.RETURN_GENERATED_KEYS)) {
 
                 for (Map.Entry<String, Object> param : this.parameters.entrySet()) {
                     stmt.setObject(Integer.valueOf(param.getKey()), param.getValue());
                 }
 
                 result = stmt.executeUpdate();
-                if (stmt.getResultSet() != null) {
+                if (stmt.getGeneratedKeys() != null) {
                     result = getGeneratedKey(stmt);
                 }
             }
@@ -178,10 +177,8 @@ public final class QueryImpl implements Query {
     private int getGeneratedKey(Statement stmt) {
         LOG.trace("called");
         try (ResultSet rset = stmt.getGeneratedKeys()) {
-            if (rset != null) {
-                List<Map<String, Object>> list = resultSetToList(rset);
-                Map<String, Object> map = list.get(0);
-                LOG.trace("MAP: {}", map.toString());
+            if (rset != null && rset.next()) {
+                return rset.getInt(1);
             }
             return 0;
         } catch (SQLException e) {
