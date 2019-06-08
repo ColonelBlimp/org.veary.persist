@@ -73,7 +73,8 @@ public final class QueryImpl implements Query {
      * @param builder {@link QueryBuilder}
      */
     public QueryImpl(DataSource ds, QueryBuilder builder) {
-        this.ds = Objects.requireNonNull(ds, Messages.getString("QueryImpl.error_msg_ds_null")); //$NON-NLS-1$
+        this.ds = Objects.requireNonNull(ds,
+            Messages.getString("QueryImpl.error_msg_ds_null")); //$NON-NLS-1$
         this.builder = Objects.requireNonNull(builder,
             Messages.getString("QueryImpl.error_msg_builder_null")); //$NON-NLS-1$
         if ("".equals(this.builder.toString())) { //$NON-NLS-1$
