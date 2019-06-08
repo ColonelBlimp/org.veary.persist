@@ -60,7 +60,7 @@ public final class QueryImpl implements Query {
 	private static final String SELECT_STR = "SELECT";
 	private static final String ENTITY_FACTORY_METHOD = "newInstance";
 
-	private final String nativeSql;
+	private final QueryBuilder builder;
 	private final DataSource ds;
 	private final Map<String, Object> parameters;
 
@@ -75,12 +75,9 @@ public final class QueryImpl implements Query {
 	 */
 	public QueryImpl(DataSource ds, QueryBuilder builder) {
 		this.ds = Objects.requireNonNull(ds, Messages.getString("QueryImpl.error_msg_ds_null")); //$NON-NLS-1$
-		Objects.requireNonNull(builder, Messages.getString("QueryImpl.error_msg_builder_null")); //$NON-NLS-1$
-		this.nativeSql = Objects
-			.requireNonNull(
-				builder.toString(),
-				Messages.getString("QueryImpl.error_msg_sql_null")); //$NON-NLS-1$
-		if ("".equals(this.nativeSql)) { //$NON-NLS-1$
+		this.builder = Objects
+			.requireNonNull(builder, Messages.getString("QueryImpl.error_msg_builder_null")); //$NON-NLS-1$
+		if ("".equals(this.builder.toString())) { //$NON-NLS-1$
 			throw new IllegalArgumentException(
 				Messages.getString("QueryImpl.error_msg_sql_empty")); //$NON-NLS-1$
 		}
@@ -137,14 +134,16 @@ public final class QueryImpl implements Query {
 
 	@Override
 	public Query executeQuery() {
-		if (!this.nativeSql.startsWith(SELECT_STR)) {
+		if (!this.builder.toString().startsWith(SELECT_STR)) {
 			throw new IllegalStateException(
 				Messages.getString("QueryImpl.error_msg_incorrect_query_type1")); //$NON-NLS-1$
 		}
 
 		try (Connection conn = this.ds.getConnection()) {
 			try (PreparedStatement stmt = conn
-				.prepareStatement(this.nativeSql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+				.prepareStatement(
+					this.builder.toString(),
+					PreparedStatement.RETURN_GENERATED_KEYS)) {
 
 				for (Map.Entry<String, Object> param : this.parameters.entrySet()) {
 					stmt.setObject(Integer.valueOf(param.getKey()), param.getValue());
@@ -163,7 +162,7 @@ public final class QueryImpl implements Query {
 
 	@Override
 	public Long executeUpdate() {
-		if (this.nativeSql.startsWith(SELECT_STR)) {
+		if (this.builder.toString().startsWith(SELECT_STR)) {
 			throw new IllegalStateException(
 				Messages.getString("QueryImpl.error_msg_incorrect_query_type2")); //$NON-NLS-1$
 		}
@@ -171,7 +170,9 @@ public final class QueryImpl implements Query {
 		int result = 0;
 		try (Connection conn = this.ds.getConnection()) {
 			try (PreparedStatement stmt = conn
-				.prepareStatement(this.nativeSql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+				.prepareStatement(
+					this.builder.toString(),
+					PreparedStatement.RETURN_GENERATED_KEYS)) {
 
 				for (Map.Entry<String, Object> param : this.parameters.entrySet()) {
 					stmt.setObject(Integer.valueOf(param.getKey()), param.getValue());

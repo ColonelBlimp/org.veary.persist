@@ -28,8 +28,7 @@ package org.veary.persist;
  * Currently, the prupose of this Interface is as a variable binding mechanism for SQL
  * statements.
  *
- * <p>
- * In the future, this could be expanded to provide a basic query building framework.
+ * <p>In the future, this could be expanded to provide a basic query building framework.
  *
  * @author Marc L. Veary
  * @since 1.0
