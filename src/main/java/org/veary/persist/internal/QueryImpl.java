@@ -73,7 +73,8 @@ public final class QueryImpl implements Query {
      * @param nativeSql {@code String}
      */
     public QueryImpl(DataSource ds, String nativeSql) {
-        this.ds = Objects.requireNonNull(ds, Messages.getString("QueryImpl.error_msg_ds_null")); //$NON-NLS-1$
+        this.ds = Objects.requireNonNull(ds,
+            Messages.getString("QueryImpl.error_msg_ds_null")); //$NON-NLS-1$
         this.nativeSql = Objects.requireNonNull(nativeSql,
             Messages.getString("QueryImpl.error_msg_sql_null")); //$NON-NLS-1$
         if ("".equals(this.nativeSql)) { //$NON-NLS-1$
@@ -232,7 +233,8 @@ public final class QueryImpl implements Query {
      */
     private List<Map<String, Object>> processResultSet(ResultSet rset) throws SQLException {
         if (!rset.isBeforeFirst()) {
-            throw new NoResultException(Messages.getString("QueryImpl.error_msg_no_results")); //$NON-NLS-1$
+            throw new NoResultException(
+                Messages.getString("QueryImpl.error_msg_no_results")); //$NON-NLS-1$
         }
 
         final ResultSetMetaData md = rset.getMetaData();
