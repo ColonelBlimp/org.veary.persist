@@ -24,22 +24,42 @@
 
 package org.veary.persist;
 
+/**
+ * <b>Purpose:</b> Defines the interface for the libray's entry point.
+ *
+ * @author Marc L. Veary
+ * @since 1.0
+ */
 public interface PersistenceManager {
 
+    /**
+     * Creates a {@code Query} object initialized with the SQL statement provided by the given
+     * {@code QueryBuilder}.
+     *
+     * @param builder {@link QueryBuilder}
+     * @return {@link Query}
+     */
     Query createQuery(QueryBuilder builder);
 
+    /**
+     * Creates a {@code Query} object initialized with the SQL statement provided by the given
+     * {@code QueryBuilder}.
+     *
+     * @param builder {@link QueryBuilder}
+     * @param entityInterface An Interface class which extends {@link Entity} the interface
+     * @return {@link Query}
+     */
     Query createQuery(QueryBuilder builder, Class<? extends Entity> entityInterface);
 
     /**
-     * Sets this connection's auto-commit mode to the given state. If a connection is in
-     * auto-commit mode, then all its SQL statements will be executed and committed as individual
-     * transactions. Otherwise, its SQL statements are grouped into transactions that are
-     * terminated by a call to either the method {@code commit} or the method {@code rollback}. By
-     * default, new connections are in auto-commit mode.
+     * Sets this connection's auto-commit mode to {@code false}. SQL statements are grouped into
+     * transactions that are auto-committed when the code exits, or auto-rolledback if an
+     * exception is thrown.
      *
-     * <p>If this method is called after a {@code createQuery} is called, the call is no-op.
+     * <p>This method should be called <b>before</b> a call to {@link #createQuery}. If called
+     * after a {@code createQuery}, the call is no-op.
      *
      * @param autoCommit {@code true} to enable auto-commit mode; {@code false} to disable it
      */
-    void setAutoCommit(boolean autoCommit);
+    void processAsTransaction();
 }

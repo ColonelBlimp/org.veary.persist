@@ -136,14 +136,12 @@ public final class QueryImpl implements Query {
                 Messages.getString("QueryImpl.error_msg_incorrect_query_type1")); //$NON-NLS-1$
         }
 
-        Connection conn = null;
-        try {
-            conn = this.ds.getConnection();
-            conn.setAutoCommit(this.isAutoCommit);
+        try (
+            Connection conn = this.ds.getConnection();
+            AutoSetAutoCommit auto = new AutoSetAutoCommit(conn, this.isAutoCommit);
+            AutoRollback tx = new AutoRollback(conn)) {
 
-            try (
-                PreparedStatement stmt = conn.prepareStatement(this.builder.toString(),
-                    PreparedStatement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement stmt = conn.prepareStatement(this.builder.toString())) {
 
                 for (final Map.Entry<String, Object> param : this.parameters.entrySet()) {
                     stmt.setObject(Integer.valueOf(param.getKey()), param.getValue());
@@ -152,26 +150,11 @@ public final class QueryImpl implements Query {
                 try (ResultSet rset = stmt.executeQuery()) {
                     this.internalResult = processResultSet(rset);
                 }
-            }
 
-            if (!conn.getAutoCommit()) {
-                conn.commit();
+                tx.commit();
             }
-
         } catch (final SQLException e) {
-            performRollback(conn);
             throw new PersistenceException(e);
-        } finally {
-            if (conn != null) {
-                try {
-                    if (!conn.getAutoCommit()) {
-                        conn.setAutoCommit(true);
-                    }
-                    conn.close();
-                } catch (final SQLException e) {
-                    // Do nothing. Log it?
-                }
-            }
         }
 
         return this;
@@ -184,16 +167,15 @@ public final class QueryImpl implements Query {
                 Messages.getString("QueryImpl.error_msg_incorrect_query_type2")); //$NON-NLS-1$
         }
 
-        int result = 0;
-        Connection conn = null;
+        int result = NO_GENERATED_KEY;
 
-        try {
-            conn = this.ds.getConnection();
-            conn.setAutoCommit(this.isAutoCommit);
+        try (
+            Connection conn = this.ds.getConnection();
+            AutoSetAutoCommit auto = new AutoSetAutoCommit(conn, this.isAutoCommit);
+            AutoRollback tx = new AutoRollback(conn)) {
 
-            try (
-                PreparedStatement stmt = conn.prepareStatement(this.builder.toString(),
-                    PreparedStatement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement stmt = conn.prepareStatement(this.builder.toString(),
+                PreparedStatement.RETURN_GENERATED_KEYS)) {
 
                 for (final Map.Entry<String, Object> param : this.parameters.entrySet()) {
                     stmt.setObject(Integer.valueOf(param.getKey()), param.getValue());
@@ -204,26 +186,11 @@ public final class QueryImpl implements Query {
                 if (key > NO_GENERATED_KEY) {
                     result = key;
                 }
-            }
 
-            if (!conn.getAutoCommit()) {
-                conn.commit();
+                tx.commit();
             }
-
         } catch (final SQLException e) {
-            performRollback(conn);
             throw new PersistenceException(e);
-        } finally {
-            if (conn != null) {
-                try {
-                    if (!conn.getAutoCommit()) {
-                        conn.setAutoCommit(true);
-                    }
-                    conn.close();
-                } catch (final SQLException e) {
-                    // Do nothing. Log it?
-                }
-            }
         }
 
         return Long.valueOf(result);
@@ -237,16 +204,6 @@ public final class QueryImpl implements Query {
     @Override
     public Query endTransaction() {
         throw new UnsupportedOperationException();
-    }
-
-    private void performRollback(Connection conn) {
-        try {
-            if (conn != null && !conn.getAutoCommit()) {
-                conn.rollback();
-            }
-        } catch (final SQLException e) {
-            // Do nothing. Log it?
-        }
     }
 
     private Method getStaticFactoryMethod() {

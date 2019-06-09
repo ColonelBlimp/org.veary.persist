@@ -32,12 +32,35 @@ import org.veary.persist.PersistenceManager;
 import org.veary.persist.Query;
 import org.veary.persist.QueryBuilder;
 
+/**
+ * <b>Purpose:</b> Concrete implementation of {@link PersistenceManager} interface. This class
+ * is the entry point for the library.
+ *
+ * @author Marc L. Veary
+ * @since 1.0
+ */
 public final class PersistenceManagerImpl implements PersistenceManager {
 
     private final DataSource dataSource;
     private boolean isAutoCommit;
     private boolean isActive;
 
+    /**
+     * The default connection auto-commit status is:
+     *
+     * <pre>
+     * Connection.getAutoCommit() == true
+     * </pre>
+     *
+     * However, if call to {@link #processAsTransaction()} is made before calling either
+     * {@link #createQuery} method, the auto-commit status will be set to:
+     *
+     * <pre>
+     * Connection.getAutoCommit() == false
+     * </pre>
+     *
+     * @param dataSource {@link DataSource}
+     */
     @Inject
     public PersistenceManagerImpl(DataSource dataSource) {
         this.dataSource = dataSource;
@@ -58,10 +81,10 @@ public final class PersistenceManagerImpl implements PersistenceManager {
     }
 
     @Override
-    public void setAutoCommit(boolean autoCommit) {
+    public void processAsTransaction() {
         if (this.isActive) {
             return;
         }
-        this.isAutoCommit = autoCommit;
+        this.isAutoCommit = false;
     }
 }
