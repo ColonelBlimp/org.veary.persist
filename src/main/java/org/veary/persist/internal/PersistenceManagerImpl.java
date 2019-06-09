@@ -46,13 +46,13 @@ public final class PersistenceManagerImpl implements PersistenceManager {
     private boolean isActive;
 
     /**
-     * The default connection auto-commit status is:
+     * Constructor. The default connection auto-commit status is:
      *
      * <pre>
      * Connection.getAutoCommit() == true
      * </pre>
      *
-     * However, if call to {@link #processAsTransaction()} is made before calling either
+     * <p>However, if call to {@link #processAsTransaction()} is made before calling either
      * {@link #createQuery} method, the auto-commit status will be set to:
      *
      * <pre>

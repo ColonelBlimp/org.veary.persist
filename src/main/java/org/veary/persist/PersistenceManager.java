@@ -58,8 +58,6 @@ public interface PersistenceManager {
      *
      * <p>This method should be called <b>before</b> a call to {@link #createQuery}. If called
      * after a {@code createQuery}, the call is no-op.
-     *
-     * @param autoCommit {@code true} to enable auto-commit mode; {@code false} to disable it
      */
     void processAsTransaction();
 }
