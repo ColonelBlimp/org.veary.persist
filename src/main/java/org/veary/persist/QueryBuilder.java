@@ -44,7 +44,7 @@ public interface QueryBuilder {
     static QueryBuilder newInstance(String nativeSql) {
         return new QueryBuilder() {
             @Override
-            public final String toString() {
+            public String toString() {
                 return nativeSql;
             }
         };

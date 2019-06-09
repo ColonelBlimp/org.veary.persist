@@ -61,6 +61,7 @@ public final class QueryImpl implements Query {
     private static final String ENTITY_FACTORY_METHOD = "newInstance";
     private final QueryBuilder builder;
     private final DataSource ds;
+    private final boolean isAutoCommit;
     private final Map<String, Object> parameters;
 
     private Class<? extends Entity> entityInterface;
@@ -72,16 +73,17 @@ public final class QueryImpl implements Query {
      * @param ds {@link DataSource}
      * @param builder {@link QueryBuilder}
      */
-    public QueryImpl(DataSource ds, QueryBuilder builder) {
+    protected QueryImpl(DataSource ds, boolean isAutoCommit, QueryBuilder builder) {
         this.ds = Objects.requireNonNull(ds,
             Messages.getString("QueryImpl.error_msg_ds_null")); //$NON-NLS-1$
+        this.isAutoCommit = isAutoCommit;
         this.builder = Objects.requireNonNull(builder,
             Messages.getString("QueryImpl.error_msg_builder_null")); //$NON-NLS-1$
         if ("".equals(this.builder.toString())) { //$NON-NLS-1$
             throw new IllegalArgumentException(
                 Messages.getString("QueryImpl.error_msg_sql_empty")); //$NON-NLS-1$
         }
-        parameters = new HashMap<>();
+        this.parameters = new HashMap<>();
     }
 
     /**
@@ -91,25 +93,25 @@ public final class QueryImpl implements Query {
      * @param builder {@link QueryBuilder}
      * @param entityInterface <code>Class&lt;? extends</code> {@link Entity}{@code >}
      */
-    public QueryImpl(DataSource ds, QueryBuilder builder,
+    protected QueryImpl(DataSource ds, boolean isAutoCommit, QueryBuilder builder,
         Class<? extends Entity> entityInterface) {
-        this(ds, builder);
+        this(ds, isAutoCommit, builder);
         this.entityInterface = Objects.requireNonNull(entityInterface,
             Messages.getString("QueryImpl.error_msg_iface_null")); //$NON-NLS-1$
     }
 
     @Override
     public Object getSingleResult() {
-        if (internalResult == null) {
+        if (this.internalResult == null) {
             throw new PersistenceException(
                 Messages.getString("QueryImpl.error_msg_method_order_1")); //$NON-NLS-1$
         }
 
-        if (internalResult.size() > 1) {
+        if (this.internalResult.size() > 1) {
             throw new NonUniqueResultException(
                 Messages.getString("QueryImpl.error_msg_too_many_results")); //$NON-NLS-1$
         }
-        return getNewInstance(getStaticFactoryMethod(), internalResult.get(0));
+        return getNewInstance(getStaticFactoryMethod(), this.internalResult.get(0));
     }
 
     @Override
@@ -123,32 +125,53 @@ public final class QueryImpl implements Query {
             throw new IllegalArgumentException(
                 Messages.getString("QueryImpl.error_msg_invalid_index")); //$NON-NLS-1$
         }
-        parameters.put(String.valueOf(index), value);
+        this.parameters.put(String.valueOf(index), value);
         return this;
     }
 
     @Override
     public Query executeQuery() {
-        if (!builder.toString().startsWith(SELECT_STR)) {
+        if (!this.builder.toString().startsWith(SELECT_STR)) {
             throw new IllegalStateException(
                 Messages.getString("QueryImpl.error_msg_incorrect_query_type1")); //$NON-NLS-1$
         }
 
-        try (Connection conn = ds.getConnection()) {
+        Connection conn = null;
+        try {
+            conn = this.ds.getConnection();
+            conn.setAutoCommit(this.isAutoCommit);
+
             try (
-                PreparedStatement stmt = conn.prepareStatement(builder.toString(),
+                PreparedStatement stmt = conn.prepareStatement(this.builder.toString(),
                     PreparedStatement.RETURN_GENERATED_KEYS)) {
 
-                for (final Map.Entry<String, Object> param : parameters.entrySet()) {
+                for (final Map.Entry<String, Object> param : this.parameters.entrySet()) {
                     stmt.setObject(Integer.valueOf(param.getKey()), param.getValue());
                 }
 
                 try (ResultSet rset = stmt.executeQuery()) {
-                    internalResult = processResultSet(rset);
+                    this.internalResult = processResultSet(rset);
                 }
             }
+
+            if (!conn.getAutoCommit()) {
+                conn.commit();
+            }
+
         } catch (final SQLException e) {
+            performRollback(conn);
             throw new PersistenceException(e);
+        } finally {
+            if (conn != null) {
+                try {
+                    if (!conn.getAutoCommit()) {
+                        conn.setAutoCommit(true);
+                    }
+                    conn.close();
+                } catch (final SQLException e) {
+                    // Do nothing. Log it?
+                }
+            }
         }
 
         return this;
@@ -156,18 +179,23 @@ public final class QueryImpl implements Query {
 
     @Override
     public Long executeUpdate() {
-        if (builder.toString().startsWith(SELECT_STR)) {
+        if (this.builder.toString().startsWith(SELECT_STR)) {
             throw new IllegalStateException(
                 Messages.getString("QueryImpl.error_msg_incorrect_query_type2")); //$NON-NLS-1$
         }
 
         int result = 0;
-        try (Connection conn = ds.getConnection()) {
+        Connection conn = null;
+
+        try {
+            conn = this.ds.getConnection();
+            conn.setAutoCommit(this.isAutoCommit);
+
             try (
-                PreparedStatement stmt = conn.prepareStatement(builder.toString(),
+                PreparedStatement stmt = conn.prepareStatement(this.builder.toString(),
                     PreparedStatement.RETURN_GENERATED_KEYS)) {
 
-                for (final Map.Entry<String, Object> param : parameters.entrySet()) {
+                for (final Map.Entry<String, Object> param : this.parameters.entrySet()) {
                     stmt.setObject(Integer.valueOf(param.getKey()), param.getValue());
                 }
 
@@ -177,8 +205,25 @@ public final class QueryImpl implements Query {
                     result = key;
                 }
             }
+
+            if (!conn.getAutoCommit()) {
+                conn.commit();
+            }
+
         } catch (final SQLException e) {
+            performRollback(conn);
             throw new PersistenceException(e);
+        } finally {
+            if (conn != null) {
+                try {
+                    if (!conn.getAutoCommit()) {
+                        conn.setAutoCommit(true);
+                    }
+                    conn.close();
+                } catch (final SQLException e) {
+                    // Do nothing. Log it?
+                }
+            }
         }
 
         return Long.valueOf(result);
@@ -194,9 +239,19 @@ public final class QueryImpl implements Query {
         throw new UnsupportedOperationException();
     }
 
+    private void performRollback(Connection conn) {
+        try {
+            if (conn != null && !conn.getAutoCommit()) {
+                conn.rollback();
+            }
+        } catch (final SQLException e) {
+            // Do nothing. Log it?
+        }
+    }
+
     private Method getStaticFactoryMethod() {
         try {
-            return entityInterface.getDeclaredMethod(ENTITY_FACTORY_METHOD, Map.class);
+            return this.entityInterface.getDeclaredMethod(ENTITY_FACTORY_METHOD, Map.class);
         } catch (NoSuchMethodException | SecurityException e) {
             throw new PersistenceException(e);
         }
@@ -205,7 +260,7 @@ public final class QueryImpl implements Query {
     private Object getNewInstance(Method staticFactory,
         Map<String, Object> result) {
         try {
-            return staticFactory.invoke(entityInterface, result);
+            return staticFactory.invoke(this.entityInterface, result);
         } catch (IllegalAccessException | IllegalArgumentException
             | InvocationTargetException e) {
             throw new PersistenceException(e);

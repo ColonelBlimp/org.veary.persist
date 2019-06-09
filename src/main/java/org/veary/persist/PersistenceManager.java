@@ -29,4 +29,17 @@ public interface PersistenceManager {
     Query createQuery(QueryBuilder builder);
 
     Query createQuery(QueryBuilder builder, Class<? extends Entity> entityInterface);
+
+    /**
+     * Sets this connection's auto-commit mode to the given state. If a connection is in
+     * auto-commit mode, then all its SQL statements will be executed and committed as individual
+     * transactions. Otherwise, its SQL statements are grouped into transactions that are
+     * terminated by a call to either the method {@code commit} or the method {@code rollback}. By
+     * default, new connections are in auto-commit mode.
+     *
+     * <p>If this method is called after a {@code createQuery} is called, the call is no-op.
+     *
+     * @param autoCommit {@code true} to enable auto-commit mode; {@code false} to disable it
+     */
+    void setAutoCommit(boolean autoCommit);
 }

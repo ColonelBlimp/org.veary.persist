@@ -35,19 +35,33 @@ import org.veary.persist.QueryBuilder;
 public final class PersistenceManagerImpl implements PersistenceManager {
 
     private final DataSource dataSource;
+    private boolean isAutoCommit;
+    private boolean isActive;
 
     @Inject
     public PersistenceManagerImpl(DataSource dataSource) {
         this.dataSource = dataSource;
+        this.isAutoCommit = true;
+        this.isActive = false;
     }
 
     @Override
     public Query createQuery(QueryBuilder builder, Class<? extends Entity> entityInterface) {
-        return new QueryImpl(this.dataSource, builder, entityInterface);
+        this.isActive = true;
+        return new QueryImpl(this.dataSource, this.isAutoCommit, builder, entityInterface);
     }
 
     @Override
     public Query createQuery(QueryBuilder builder) {
-        return new QueryImpl(this.dataSource, builder);
+        this.isActive = true;
+        return new QueryImpl(this.dataSource, this.isAutoCommit, builder);
+    }
+
+    @Override
+    public void setAutoCommit(boolean autoCommit) {
+        if (this.isActive) {
+            return;
+        }
+        this.isAutoCommit = autoCommit;
     }
 }
