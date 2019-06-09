@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.veary.persist.entity;
+package org.veary.persist;
 
 public interface Entity {
 

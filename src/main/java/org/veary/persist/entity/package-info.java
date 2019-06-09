@@ -1,1 +1,0 @@
-package org.veary.persist.entity;

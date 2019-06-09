@@ -24,8 +24,6 @@
 
 package org.veary.persist;
 
-import org.veary.persist.entity.Entity;
-
 public interface PersistenceManager {
 
     Query createQuery(QueryBuilder builder);

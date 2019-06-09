@@ -41,9 +41,9 @@ import java.util.Objects;
 
 import javax.sql.DataSource;
 
+import org.veary.persist.Entity;
 import org.veary.persist.Query;
 import org.veary.persist.QueryBuilder;
-import org.veary.persist.entity.Entity;
 import org.veary.persist.exceptions.NoResultException;
 import org.veary.persist.exceptions.NonUniqueResultException;
 import org.veary.persist.exceptions.PersistenceException;

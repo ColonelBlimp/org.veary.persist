@@ -30,9 +30,9 @@ import java.util.Map;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import org.veary.persist.Entity;
 import org.veary.persist.PersistenceManager;
 import org.veary.persist.QueryBuilder;
-import org.veary.persist.entity.Entity;
 import org.veary.persist.exceptions.NoResultException;
 import org.veary.persist.exceptions.PersistenceException;
 

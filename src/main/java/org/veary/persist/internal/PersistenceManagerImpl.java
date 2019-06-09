@@ -27,10 +27,10 @@ package org.veary.persist.internal;
 import javax.inject.Inject;
 import javax.sql.DataSource;
 
+import org.veary.persist.Entity;
 import org.veary.persist.PersistenceManager;
 import org.veary.persist.Query;
 import org.veary.persist.QueryBuilder;
-import org.veary.persist.entity.Entity;
 
 public final class PersistenceManagerImpl implements PersistenceManager {
 
