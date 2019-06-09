@@ -24,16 +24,11 @@
 
 package org.veary.persist.internal;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,10 +37,8 @@ import java.util.Objects;
 import javax.sql.DataSource;
 
 import org.veary.persist.Entity;
-import org.veary.persist.Query;
 import org.veary.persist.QueryBuilder;
 import org.veary.persist.exceptions.NoResultException;
-import org.veary.persist.exceptions.NonUniqueResultException;
 import org.veary.persist.exceptions.PersistenceException;
 
 /**
@@ -54,10 +47,10 @@ import org.veary.persist.exceptions.PersistenceException;
  * @author Marc L. Veary
  * @since 1.0
  */
-public final class QueryImpl implements Query {
+public final class QueryImpl {
 
     private static final int NO_GENERATED_KEY = 0;
-    private static final String SELECT_STR = "SELECT";
+    //    private static final String SELECT_STR = "SELECT";
     private static final String ENTITY_FACTORY_METHOD = "newInstance";
     private final QueryBuilder builder;
     private final DataSource ds;
@@ -100,6 +93,7 @@ public final class QueryImpl implements Query {
             Messages.getString("QueryImpl.error_msg_iface_null")); //$NON-NLS-1$
     }
 
+    /*
     @Override
     public Object getSingleResult() {
         if (this.internalResult == null) {
@@ -196,16 +190,6 @@ public final class QueryImpl implements Query {
         return Long.valueOf(result);
     }
 
-    @Override
-    public Query startTransaction() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Query endTransaction() {
-        throw new UnsupportedOperationException();
-    }
-
     private Method getStaticFactoryMethod() {
         try {
             return this.entityInterface.getDeclaredMethod(ENTITY_FACTORY_METHOD, Map.class);
@@ -223,7 +207,7 @@ public final class QueryImpl implements Query {
             throw new PersistenceException(e);
         }
     }
-
+    */
     /**
      * Return the generated key (if there is one), otherwise return 0 (zero).
      *

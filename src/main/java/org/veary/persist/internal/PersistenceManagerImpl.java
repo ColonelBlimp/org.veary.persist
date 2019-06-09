@@ -27,11 +27,6 @@ package org.veary.persist.internal;
 import javax.inject.Inject;
 import javax.sql.DataSource;
 
-import org.veary.persist.Entity;
-import org.veary.persist.PersistenceManager;
-import org.veary.persist.Query;
-import org.veary.persist.QueryBuilder;
-
 /**
  * <b>Purpose:</b> Concrete implementation of {@link PersistenceManager} interface. This class
  * is the entry point for the library.
@@ -39,11 +34,11 @@ import org.veary.persist.QueryBuilder;
  * @author Marc L. Veary
  * @since 1.0
  */
-public final class PersistenceManagerImpl implements PersistenceManager {
+public final class PersistenceManagerImpl {
 
     private final DataSource dataSource;
-    private boolean isAutoCommit;
-    private boolean isActive;
+    private final boolean isAutoCommit;
+    private final boolean isActive;
 
     /**
      * Constructor. The default connection auto-commit status is:
@@ -67,8 +62,7 @@ public final class PersistenceManagerImpl implements PersistenceManager {
         this.isAutoCommit = true;
         this.isActive = false;
     }
-
-    @Override
+    /*
     public Query createQuery(QueryBuilder builder, Class<? extends Entity> entityInterface) {
         this.isActive = true;
         return new QueryImpl(this.dataSource, this.isAutoCommit, builder, entityInterface);
@@ -87,4 +81,5 @@ public final class PersistenceManagerImpl implements PersistenceManager {
         }
         this.isAutoCommit = false;
     }
+    */
 }

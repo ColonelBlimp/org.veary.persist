@@ -24,37 +24,15 @@
 
 package org.veary.persist;
 
-/**
- * Currently, the prupose of this Interface is as a variable binding mechanism for SQL
- * statements.
- *
- * <p>In the future, this could be expanded to provide a basic query building framework.
- *
- * @author Marc L. Veary
- * @since 1.0
- */
-public interface QueryBuilder {
+public interface Transaction {
 
     /**
-     * Static factory method.
-     *
-     * @param nativeSql {@code String}
-     * @return {@code QueryBuilder} instance
+     * Marks the start of the transaction unit.
      */
-    static QueryBuilder newInstance(String nativeSql) {
-        return new QueryBuilder() {
-            @Override
-            public String toString() {
-                return nativeSql;
-            }
-        };
-    }
+    void start();
 
     /**
-     * Returns a string representation of a native SQL statement built by this builder.
-     *
-     * @return cannot return an empty string
+     * Persists the changes. If there is an error, rollsback all the changes.
      */
-    @Override
-    String toString();
+    void commit();
 }

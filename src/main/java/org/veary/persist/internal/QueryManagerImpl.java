@@ -22,25 +22,29 @@
  * SOFTWARE.
  */
 
-package org.veary.persist.test;
+package org.veary.persist.internal;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
+import java.util.Objects;
+
+import javax.inject.Inject;
 import javax.sql.DataSource;
 
-import org.veary.persist.PersistenceManager;
-import org.veary.persist.internal.PersistenceManagerImpl;
+import org.veary.persist.QueryBuilder;
+import org.veary.persist.QueryManager;
+import org.veary.persist.SelectQuery;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.jndi.JndiIntegration;
+public final class QueryManagerImpl implements QueryManager {
 
-public class GuicePersistTestModule extends AbstractModule {
+    private final DataSource ds;
+
+    @Inject
+    public QueryManagerImpl(DataSource ds) {
+        this.ds = Objects.requireNonNull(ds,
+            Messages.getString("QueryManagerImpl.error_msg_ds_null"));
+    }
 
     @Override
-    protected void configure() {
-        bind(Context.class).to(InitialContext.class);
-        bind(DataSource.class)
-            .toProvider(JndiIntegration.fromJndi(DataSource.class, "java:/comp/env/jdbc/pvs"));
-        bind(PersistenceManager.class).to(PersistenceManagerImpl.class);
+    public SelectQuery createQuery(QueryBuilder builder, Class<?> iface) {
+        return new SelectQueryImpl(this.ds, builder, iface);
     }
 }

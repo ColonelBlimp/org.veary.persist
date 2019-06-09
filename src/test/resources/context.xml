@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE xml>
 <Context>
-  <Resource name="jdbc/pvs" 
+  <Resource name="jdbc/debs" 
             auth="Container" 
             type="javax.sql.DataSource" 
             driverClassName="org.h2.Driver"

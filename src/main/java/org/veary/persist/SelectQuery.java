@@ -24,48 +24,22 @@
 
 package org.veary.persist;
 
-import java.sql.PreparedStatement;
 import java.util.List;
 
-/**
- * The main interface for queries.
- *
- * <p>The class is designed for 'builder' type use, thus many returned values are the
- * {@code Query} object itself.
- *
- * @author Marc L. Veary
- * @since 1.0
- */
-public interface Query {
+public interface SelectQuery {
+
+    /**
+     * Sets the value of the designated index using the given object.
+     *
+     * @param index the first parameter is 1, the second is 2, ...
+     * @param value the object containing the input parameter value
+     * @return the current {@code Transaction} object
+     */
+    SelectQuery setParameter(int index, Object value);
+
+    SelectQuery execute();
 
     Object getSingleResult();
 
-    List<Object> getResultList();
-
-    /**
-     * Set a parameter Object for a {@link PreparedStatement}.
-     *
-     * @param index the index starts at 1 (one)
-     * @param value {@code Object}
-     * @return the current {@link Query} object
-     */
-    Query setParameter(int index, Object value);
-
-    /**
-     * Execute a read query (SELECT).
-     *
-     * @return the current {@link Query} object
-     */
-    Query executeQuery();
-
-    /**
-     * Execute an INSERT, UPDATE or DELETE statement.
-     *
-     * @return the number of entries updated or deleted, or the generated ID if INSERT
-     */
-    Long executeUpdate();
-
-    Query startTransaction();
-
-    Query endTransaction();
+    List<? extends Entity> getResultList();
 }
