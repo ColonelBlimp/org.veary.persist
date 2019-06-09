@@ -189,6 +189,11 @@ public final class QueryImpl implements Query {
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public Query endTransaction() {
+        throw new UnsupportedOperationException();
+    }
+
     private Method getStaticFactoryMethod() {
         try {
             return entityInterface.getDeclaredMethod(ENTITY_FACTORY_METHOD, Map.class);
