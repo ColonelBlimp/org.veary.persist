@@ -139,7 +139,7 @@ public final class QueryImpl implements Query {
         try (
             Connection conn = this.ds.getConnection();
             AutoSetAutoCommit auto = new AutoSetAutoCommit(conn, this.isAutoCommit);
-            AutoRollback tx = new AutoRollback(conn)) {
+            AutoRollback tx = new AutoRollback(conn, this.isAutoCommit)) {
 
             try (PreparedStatement stmt = conn.prepareStatement(this.builder.toString())) {
 
@@ -172,7 +172,7 @@ public final class QueryImpl implements Query {
         try (
             Connection conn = this.ds.getConnection();
             AutoSetAutoCommit auto = new AutoSetAutoCommit(conn, this.isAutoCommit);
-            AutoRollback tx = new AutoRollback(conn)) {
+            AutoRollback tx = new AutoRollback(conn, this.isAutoCommit)) {
 
             try (PreparedStatement stmt = conn.prepareStatement(this.builder.toString(),
                 PreparedStatement.RETURN_GENERATED_KEYS)) {

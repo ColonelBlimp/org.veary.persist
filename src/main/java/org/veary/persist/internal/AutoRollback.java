@@ -38,14 +38,16 @@ public final class AutoRollback implements AutoCloseable {
 
     private final Connection conn;
     private boolean committed;
+    private final boolean autoCommit;
 
     /**
      * Constructor.
      *
      * @param conn {@code Connection}
      */
-    protected AutoRollback(Connection conn) {
+    protected AutoRollback(Connection conn, boolean autoCommit) {
         this.conn = conn;
+        this.autoCommit = autoCommit;
     }
 
     /**
@@ -54,13 +56,15 @@ public final class AutoRollback implements AutoCloseable {
      * @throws SQLException if there is a problem
      */
     public void commit() throws SQLException {
-        this.conn.commit();
+        if (!this.autoCommit) {
+            this.conn.commit();
+        }
         this.committed = true;
     }
 
     @Override
     public void close() throws SQLException {
-        if (!this.committed) {
+        if (!this.committed && !this.autoCommit) {
             this.conn.rollback();
         }
     }
