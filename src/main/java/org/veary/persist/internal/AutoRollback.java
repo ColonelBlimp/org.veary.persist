@@ -27,6 +27,9 @@ package org.veary.persist.internal;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * Automatically rollsback if the transaction has not been committed. This used with a
  * {@code try-with-resource} syntax.
@@ -36,6 +39,7 @@ import java.sql.SQLException;
  */
 public final class AutoRollback implements AutoCloseable {
 
+    private static final Logger LOG = LogManager.getLogger(AutoRollback.class);
     private final Connection conn;
     private boolean committed;
 
@@ -56,7 +60,7 @@ public final class AutoRollback implements AutoCloseable {
     public void commit() throws SQLException {
         if (this.conn.getAutoCommit()) {
             throw new IllegalStateException(
-                "AutoRollback.commit: Connection set to auto-commit.");
+                "Connection set to auto-commit.");
         }
         this.conn.commit();
         this.committed = true;
@@ -66,6 +70,7 @@ public final class AutoRollback implements AutoCloseable {
     public void close() throws SQLException {
         if (!this.committed) {
             this.conn.rollback();
+            LOG.error("Transaction rolled back.");
         }
     }
 }

@@ -87,5 +87,27 @@ public class TransactionManagerTest {
         manager.persist(createAccountTwo);
 
         manager.commitTransaction();
+
+        Assert.assertTrue(manager.getRowCount() == 1);
+        Assert.assertTrue(manager.getGeneratedIds().size() == 2);
+    }
+
+    @Test(
+        expectedExceptions = IllegalStateException.class,
+        expectedExceptionsMessageRegExp = "No active transaction. Call TransactionManager.beginTransaction\\(\\) first.")
+    public void exceptionCommitBeforeBegin() {
+        final TransactionManager manager = this.injector.getInstance(TransactionManager.class);
+        Assert.assertNotNull(manager);
+        manager.persist(null);
+    }
+
+    @Test(
+        expectedExceptions = NullPointerException.class,
+        expectedExceptionsMessageRegExp = "Statement cannot be null.")
+    public void exceptionNullStatement() {
+        final TransactionManager manager = this.injector.getInstance(TransactionManager.class);
+        Assert.assertNotNull(manager);
+        manager.beginTransaction();
+        manager.persist(null);
     }
 }

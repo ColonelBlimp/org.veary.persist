@@ -31,6 +31,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.inject.Inject;
 import javax.sql.DataSource;
@@ -73,7 +74,7 @@ public final class TransactionManagerImpl implements TransactionManager {
         try (
             Connection conn = this.ds.getConnection();
             AutoSetAutoCommit auto = new AutoSetAutoCommit(conn);
-            AutoRollback rb = new AutoRollback(conn)) {
+            AutoRollback tx = new AutoRollback(conn)) {
 
             for (Statement statement : this.statements) {
                 try (PreparedStatement pstmt = conn.prepareStatement(statement.getStatement(),
@@ -85,15 +86,11 @@ public final class TransactionManagerImpl implements TransactionManager {
 
                     this.rowCountResult = pstmt.executeUpdate();
 
-                    try (ResultSet rset = pstmt.getGeneratedKeys()) {
-                        if (rset.isBeforeFirst()) {
-                            while (rset.next()) {
-                                this.generatedIds.add(Integer.valueOf(rset.getInt(1)));
-                            }
-                        }
-                    }
+                    setGeneratedKeys(pstmt);
                 }
             }
+
+            tx.commit();
 
         } catch (final SQLException e) {
             throw new PersistenceException(e);
@@ -108,7 +105,7 @@ public final class TransactionManagerImpl implements TransactionManager {
             throw new IllegalStateException(
                 "No active transaction. Call TransactionManager.beginTransaction() first.");
         }
-        this.statements.add(statement);
+        this.statements.add(Objects.requireNonNull(statement, "Statement cannot be null."));
     }
 
     @Override
@@ -119,5 +116,15 @@ public final class TransactionManagerImpl implements TransactionManager {
     @Override
     public int getRowCount() {
         return this.rowCountResult;
+    }
+
+    private void setGeneratedKeys(PreparedStatement pstmt) throws SQLException {
+        try (ResultSet rset = pstmt.getGeneratedKeys()) {
+            if (rset.isBeforeFirst()) {
+                while (rset.next()) {
+                    this.generatedIds.add(Integer.valueOf(rset.getInt(1)));
+                }
+            }
+        }
     }
 }
