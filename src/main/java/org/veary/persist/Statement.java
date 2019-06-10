@@ -22,50 +22,45 @@
  * SOFTWARE.
  */
 
-package org.veary.persist.internal;
+package org.veary.persist;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-/**
- * Automatically rollsback if the transaction has not been committed. This used with a
- * {@code try-with-resource} syntax.
- *
- * @author Marc L. Veary
- * @since 1.0
- */
-public final class AutoRollback implements AutoCloseable {
+public interface Statement {
 
-    private final Connection conn;
-    private boolean committed;
+    Statement setParameter(int index, Object value);
 
-    /**
-     * Constructor.
-     *
-     * @param conn {@code Connection}
-     */
-    protected AutoRollback(Connection conn) {
-        this.conn = conn;
-    }
+    String getStatement();
 
-    /**
-     * Wrapper around {@link Connection#commit()}.
-     *
-     * @throws SQLException if there is a problem
-     */
-    public void commit() throws SQLException {
-        if (this.conn.getAutoCommit()) {
-            throw new IllegalStateException(
-                "AutoRollback.commit: Connection set to auto-commit.");
-        }
-        this.conn.commit();
-        this.committed = true;
-    }
+    List<Object> getParameters();
 
-    @Override
-    public void close() throws SQLException {
-        if (!this.committed) {
-            this.conn.rollback();
-        }
+    static Statement newInstance(QueryBuilder queryBuilder) {
+        final String stmt = queryBuilder.toString();
+
+        return new Statement() {
+
+            private final String statement = stmt;
+            private final Map<Integer, Object> params = new HashMap<>();
+
+            @Override
+            public Statement setParameter(int index, Object value) {
+                this.params.put(Integer.valueOf(index), value);
+                return this;
+            }
+
+            @Override
+            public String getStatement() {
+                return this.statement;
+            }
+
+            @Override
+            public List<Object> getParameters() {
+                return Collections.unmodifiableList(Arrays.asList(this.params.values()));
+            }
+        };
     }
 }

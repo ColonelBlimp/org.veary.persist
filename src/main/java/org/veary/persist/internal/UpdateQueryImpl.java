@@ -24,17 +24,57 @@
 
 package org.veary.persist.internal;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.veary.persist.QueryBuilder;
 import org.veary.persist.UpdateQuery;
+import org.veary.persist.exceptions.PersistenceException;
 
 public final class UpdateQueryImpl implements UpdateQuery {
 
-    public UpdateQueryImpl(QueryBuilder queryBuilder) {
+    private static final Logger LOG = LogManager.getLogger(UpdateQueryImpl.class);
 
+    private final PreparedStatement stmt;
+
+    public UpdateQueryImpl(Connection conn, QueryBuilder queryBuilder) {
+        try {
+            this.stmt = conn.prepareStatement(queryBuilder.toString(),
+                PreparedStatement.RETURN_GENERATED_KEYS);
+        } catch (final SQLException e) {
+            throw new PersistenceException(e);
+        }
     }
 
     @Override
     public UpdateQuery setParameter(int index, Object value) {
-        return null;
+        try {
+            this.stmt.setObject(index, value);
+        } catch (final SQLException e) {
+            throw new PersistenceException(e);
+        }
+        return this;
+    }
+
+    @Override
+    public int persist() {
+        int result = 0;
+
+        try {
+            result = this.stmt.executeUpdate();
+        } catch (final SQLException e) {
+            throw new PersistenceException(e);
+        } finally {
+            try {
+                this.stmt.close();
+            } catch (final SQLException e) {
+                LOG.error("UpdateQuery.persist: PreparedStatement.close error {}", e);
+            }
+        }
+
+        return result;
     }
 }

@@ -26,5 +26,9 @@ package org.veary.persist;
 
 public interface TransactionManager {
 
-    Transaction getTransaction();
+    void beginTransaction();
+
+    void persist(Statement statement);
+
+    void commitTransaction();
 }

@@ -24,28 +24,77 @@
 
 package org.veary.persist.internal;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.inject.Inject;
 import javax.sql.DataSource;
 
-import org.veary.persist.Transaction;
+import org.veary.persist.Statement;
 import org.veary.persist.TransactionManager;
+import org.veary.persist.exceptions.PersistenceException;
 
 public final class TransactionManagerImpl implements TransactionManager {
 
     private final DataSource ds;
-
-    private Transaction transaction;
+    private boolean txActive;
+    private final List<Statement> statements;
+    private int rowCountResult;
+    private int generatedIdResult;
 
     @Inject
     public TransactionManagerImpl(DataSource ds) {
         this.ds = ds;
+        this.statements = new ArrayList<>();
     }
 
     @Override
-    public Transaction getTransaction() {
-        if (this.transaction == null) {
-            this.transaction = new TransactionImpl(this.ds);
+    public void beginTransaction() {
+        this.txActive = true;
+    }
+
+    @Override
+    public void commitTransaction() {
+        if (this.statements.isEmpty()) {
+            throw new IllegalStateException("Nothing to commit.");
         }
-        return this.transaction;
+
+        try (
+            Connection conn = this.ds.getConnection();
+            AutoSetAutoCommit auto = new AutoSetAutoCommit(conn);
+            AutoRollback rb = new AutoRollback(conn)) {
+
+            for (Statement statement : this.statements) {
+                try (PreparedStatement pstmt = conn.prepareStatement(statement.getStatement(),
+                    PreparedStatement.RETURN_GENERATED_KEYS)) {
+                    int index = 1;
+                    for (final Object param : statement.getParameters()) {
+                        pstmt.setObject(index++, param);
+                    }
+
+                    this.rowCountResult = pstmt.executeUpdate();
+
+                    try (ResultSet rset = pstmt.getGeneratedKeys()) {
+                        if (rset.isBeforeFirst()) {
+                            this.generatedIdResult = 0;
+                        } else {
+
+                        }
+                    }
+                }
+            }
+
+        } catch (final SQLException e) {
+            throw new PersistenceException(e);
+        }
+    }
+
+    @Override
+    public void persist(Statement statement) {
+        this.statements.add(statement);
     }
 }

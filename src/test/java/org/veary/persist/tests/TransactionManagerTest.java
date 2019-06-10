@@ -63,6 +63,28 @@ public class TransactionManagerTest {
     public void createTransaction() {
         final TransactionManager manager = this.injector.getInstance(TransactionManager.class);
         Assert.assertNotNull(manager);
-        Assert.assertNotNull(manager.getTransaction());
+        /*
+        final Transaction transaction = manager.getTransaction();
+        Assert.assertNotNull(transaction);
+        
+        final QueryBuilder queryBuilder = QueryBuilder.newInstance(
+            "CREATE TABLE IF NOT EXISTS debs.account(id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255))");
+        
+        final Statement createTable = transaction.create(queryBuilder);
+        Assert.assertNotNull(createTable);
+        final int result = createTable.persistRowCount();
+        System.out.println(">>> " + result);
+        transaction.commit();
+        */
+        /*
+        manager.getTransaction().start();
+        final QueryBuilder accountBuilder = QueryBuilder.newInstance(
+            "INSERT INTO debs.account VALUES(name=?)");
+        final UpdateQuery accountInsert = manager.createQuery(accountBuilder);
+        Assert.assertNotNull(accountInsert);
+        accountInsert.setParameter(1, "CASH");
+        accountInsert.persist();
+        manager.getTransaction().commit();
+        */
     }
 }

@@ -34,4 +34,6 @@ public interface UpdateQuery {
      * @return the current {@code Transaction} object
      */
     UpdateQuery setParameter(int index, Object value);
+
+    int persist();
 }

@@ -24,24 +24,65 @@
 
 package org.veary.persist.internal;
 
-import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Objects;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.veary.persist.QueryBuilder;
+import org.veary.persist.Statement;
 import org.veary.persist.Transaction;
+import org.veary.persist.exceptions.PersistenceException;
 
 public final class TransactionImpl implements Transaction {
 
-    private final DataSource ds;
+    private static final Logger LOG = LogManager.getLogger(TransactionImpl.class);
 
-    public TransactionImpl(DataSource ds) {
-        this.ds = ds;
+    private final Connection conn;
+
+    public TransactionImpl(Connection conn) {
+        this.conn = Objects.requireNonNull(conn, "Transaction.Connection cannot be null.");
     }
 
     @Override
-    public void start() {
-
+    public void begin() {
+        try {
+            if (this.conn.getAutoCommit()) {
+                throw new IllegalStateException(
+                    "Transaction.start the connection is set to auto-commit.");
+            }
+        } catch (final SQLException e) {
+            throw new PersistenceException(e);
+        }
     }
 
     @Override
     public void commit() {
+        try {
+            this.conn.commit();
+        } catch (final SQLException e) {
+            doRollback();
+            throw new PersistenceException(e);
+        } finally {
+            try {
+                this.conn.close();
+            } catch (final SQLException e) {
+                LOG.error("Connection.close failed: {}", e);
+            }
+        }
+    }
+
+    @Override
+    public Statement create(QueryBuilder queryBuilder) {
+        return null;
+    }
+
+    private void doRollback() {
+        try {
+            this.conn.rollback();
+        } catch (final SQLException e) {
+            LOG.error("Connection.rollback failed: {}", e);
+        }
     }
 }

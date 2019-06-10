@@ -29,7 +29,9 @@ public interface Transaction {
     /**
      * Marks the start of the transaction unit.
      */
-    void start();
+    void begin();
+
+    Statement create(QueryBuilder queryBuilder);
 
     /**
      * Persists the changes. If there is an error, rollsback all the changes.
