@@ -24,16 +24,12 @@
 
 package org.veary.persist.internal;
 
-import org.veary.persist.QueryManager;
-import org.veary.persist.TransactionManager;
+import org.veary.persist.UpdateQuery;
 
-import com.google.inject.AbstractModule;
-
-public final class GuicePersistModule extends AbstractModule {
+public final class UpdateQueryImpl implements UpdateQuery {
 
     @Override
-    protected void configure() {
-        bind(QueryManager.class).to(QueryManagerImpl.class);
-        bind(TransactionManager.class).to(TransactionManagerImpl.class);
+    public UpdateQuery setParameter(int index, Object value) {
+        return null;
     }
 }

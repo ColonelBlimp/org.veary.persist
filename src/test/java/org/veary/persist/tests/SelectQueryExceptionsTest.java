@@ -124,4 +124,19 @@ public class SelectQueryExceptionsTest {
         Assert.assertNotNull(query);
         query.execute();
     }
+
+    /*
+    @Test(
+        expectedExceptions = NoResultException.class,
+        expectedExceptionsMessageRegExp = "SelectQuery.execute did not return any results.")
+    public void constructorNoResultsException() {
+        final QueryManager manager = this.injector.getInstance(QueryManager.class);
+        Assert.assertNotNull(manager);
+        final SelectQuery query = manager.createQuery(
+            QueryBuilder.newInstance("SELECT * FROM account WHERE id=?"),
+            Entity.class);
+        Assert.assertNotNull(query);
+        query.execute();
+    }
+    */
 }

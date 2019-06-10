@@ -24,16 +24,33 @@
 
 package org.veary.persist.internal;
 
-import org.veary.persist.QueryManager;
+import javax.inject.Inject;
+import javax.sql.DataSource;
+
+import org.veary.persist.Transaction;
 import org.veary.persist.TransactionManager;
+import org.veary.persist.UpdateQuery;
 
-import com.google.inject.AbstractModule;
+public final class TransactionManagerImpl implements TransactionManager {
 
-public final class GuicePersistModule extends AbstractModule {
+    private final DataSource ds;
+
+    private Transaction transaction;
+
+    @Inject
+    public TransactionManagerImpl(DataSource ds) {
+        this.ds = ds;
+    }
 
     @Override
-    protected void configure() {
-        bind(QueryManager.class).to(QueryManagerImpl.class);
-        bind(TransactionManager.class).to(TransactionManagerImpl.class);
+    public Transaction getTransaction() {
+        if (this.transaction == null) {
+            this.transaction = new TransactionImpl(this.ds);
+        }
+        return this.transaction;
+    }
+
+    @Override
+    public void persist(UpdateQuery updateQuery) {
     }
 }

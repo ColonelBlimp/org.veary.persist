@@ -51,7 +51,7 @@ public final class QueryImpl {
 
     private static final int NO_GENERATED_KEY = 0;
     //    private static final String SELECT_STR = "SELECT";
-    private static final String ENTITY_FACTORY_METHOD = "newInstance";
+    //    private static final String ENTITY_FACTORY_METHOD = "newInstance";
     private final QueryBuilder builder;
     private final DataSource ds;
     private final boolean isAutoCommit;
@@ -100,19 +100,19 @@ public final class QueryImpl {
             throw new PersistenceException(
                 Messages.getString("QueryImpl.error_msg_method_order_1")); //$NON-NLS-1$
         }
-
+    
         if (this.internalResult.size() > 1) {
             throw new NonUniqueResultException(
                 Messages.getString("QueryImpl.error_msg_too_many_results")); //$NON-NLS-1$
         }
         return getNewInstance(getStaticFactoryMethod(), this.internalResult.get(0));
     }
-
+    
     @Override
     public List<Object> getResultList() {
         return Collections.emptyList();
     }
-
+    
     @Override
     public Query setParameter(int index, Object value) {
         if (index < 1) {
@@ -122,74 +122,74 @@ public final class QueryImpl {
         this.parameters.put(String.valueOf(index), value);
         return this;
     }
-
+    
     @Override
     public Query executeQuery() {
         if (!this.builder.toString().startsWith(SELECT_STR)) {
             throw new IllegalStateException(
                 Messages.getString("QueryImpl.error_msg_incorrect_query_type1")); //$NON-NLS-1$
         }
-
+    
         try (
             Connection conn = this.ds.getConnection();
             AutoSetAutoCommit auto = new AutoSetAutoCommit(conn, this.isAutoCommit);
             AutoRollback tx = new AutoRollback(conn, this.isAutoCommit)) {
-
+    
             try (PreparedStatement stmt = conn.prepareStatement(this.builder.toString())) {
-
+    
                 for (final Map.Entry<String, Object> param : this.parameters.entrySet()) {
                     stmt.setObject(Integer.valueOf(param.getKey()), param.getValue());
                 }
-
+    
                 try (ResultSet rset = stmt.executeQuery()) {
                     this.internalResult = processResultSet(rset);
                 }
-
+    
                 tx.commit();
             }
         } catch (final SQLException e) {
             throw new PersistenceException(e);
         }
-
+    
         return this;
     }
-
+    
     @Override
     public Long executeUpdate() {
         if (this.builder.toString().startsWith(SELECT_STR)) {
             throw new IllegalStateException(
                 Messages.getString("QueryImpl.error_msg_incorrect_query_type2")); //$NON-NLS-1$
         }
-
+    
         int result = NO_GENERATED_KEY;
-
+    
         try (
             Connection conn = this.ds.getConnection();
             AutoSetAutoCommit auto = new AutoSetAutoCommit(conn, this.isAutoCommit);
             AutoRollback tx = new AutoRollback(conn, this.isAutoCommit)) {
-
+    
             try (PreparedStatement stmt = conn.prepareStatement(this.builder.toString(),
                 PreparedStatement.RETURN_GENERATED_KEYS)) {
-
+    
                 for (final Map.Entry<String, Object> param : this.parameters.entrySet()) {
                     stmt.setObject(Integer.valueOf(param.getKey()), param.getValue());
                 }
-
+    
                 result = stmt.executeUpdate();
                 final int key = getGeneratedKey(stmt);
                 if (key > NO_GENERATED_KEY) {
                     result = key;
                 }
-
+    
                 tx.commit();
             }
         } catch (final SQLException e) {
             throw new PersistenceException(e);
         }
-
+    
         return Long.valueOf(result);
     }
-
+    
     private Method getStaticFactoryMethod() {
         try {
             return this.entityInterface.getDeclaredMethod(ENTITY_FACTORY_METHOD, Map.class);
@@ -197,7 +197,7 @@ public final class QueryImpl {
             throw new PersistenceException(e);
         }
     }
-
+    
     private Object getNewInstance(Method staticFactory,
         Map<String, Object> result) {
         try {

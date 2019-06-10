@@ -22,18 +22,43 @@
  * SOFTWARE.
  */
 
-package org.veary.persist.internal;
+package org.veary.persist.tests;
 
-import org.veary.persist.QueryManager;
-import org.veary.persist.TransactionManager;
+import java.io.File;
 
-import com.google.inject.AbstractModule;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+import org.veary.persist.internal.GuicePersistModule;
 
-public final class GuicePersistModule extends AbstractModule {
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
-    @Override
-    protected void configure() {
-        bind(QueryManager.class).to(QueryManagerImpl.class);
-        bind(TransactionManager.class).to(TransactionManagerImpl.class);
+import hthurow.tomcatjndi.TomcatJNDI;
+
+public class SelectQueryTest {
+
+    private TomcatJNDI tomcatJndi;
+    private Injector injector;
+
+    @BeforeClass
+    public void setUp() {
+        final File contextXml = new File("src/test/resources/context.xml");
+        this.tomcatJndi = new TomcatJNDI();
+        this.tomcatJndi.processContextXml(contextXml);
+        this.tomcatJndi.start();
+        this.injector = Guice.createInjector(
+            new GuicePersistTestModule(),
+            new GuicePersistModule());
+    }
+
+    @AfterClass
+    public void teardown() {
+        this.tomcatJndi.tearDown();
+    }
+
+    @Test
+    public void createTables() {
+
     }
 }

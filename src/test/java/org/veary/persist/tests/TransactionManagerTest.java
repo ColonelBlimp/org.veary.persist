@@ -22,18 +22,47 @@
  * SOFTWARE.
  */
 
-package org.veary.persist.internal;
+package org.veary.persist.tests;
 
-import org.veary.persist.QueryManager;
+import java.io.File;
+
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 import org.veary.persist.TransactionManager;
+import org.veary.persist.internal.GuicePersistModule;
 
-import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
-public final class GuicePersistModule extends AbstractModule {
+import hthurow.tomcatjndi.TomcatJNDI;
 
-    @Override
-    protected void configure() {
-        bind(QueryManager.class).to(QueryManagerImpl.class);
-        bind(TransactionManager.class).to(TransactionManagerImpl.class);
+public class TransactionManagerTest {
+
+    private TomcatJNDI tomcatJndi;
+    private Injector injector;
+
+    @BeforeClass
+    public void setUp() {
+        final File contextXml = new File("src/test/resources/context.xml");
+        this.tomcatJndi = new TomcatJNDI();
+        this.tomcatJndi.processContextXml(contextXml);
+        this.tomcatJndi.start();
+        this.injector = Guice.createInjector(
+            new GuicePersistTestModule(),
+            new GuicePersistModule());
+    }
+
+    @AfterClass
+    public void teardown() {
+        this.tomcatJndi.tearDown();
+    }
+
+    @Test
+    public void createTransaction() {
+        final TransactionManager manager = this.injector.getInstance(TransactionManager.class);
+        Assert.assertNotNull(manager);
+        Assert.assertNotNull(manager.getTransaction());
     }
 }
