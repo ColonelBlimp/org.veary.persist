@@ -24,10 +24,8 @@
 
 package org.veary.persist;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public interface Statement {
@@ -36,15 +34,15 @@ public interface Statement {
 
     String getStatement();
 
-    List<Object> getParameters();
+    Map<Integer, Object> getParameters();
 
     static Statement newInstance(QueryBuilder queryBuilder) {
         final String stmt = queryBuilder.toString();
 
         return new Statement() {
 
-            private final String statement = stmt;
-            private final Map<Integer, Object> params = new HashMap<>();
+            private String statement = stmt;
+            private Map<Integer, Object> params = new HashMap<>();
 
             @Override
             public Statement setParameter(int index, Object value) {
@@ -58,8 +56,8 @@ public interface Statement {
             }
 
             @Override
-            public List<Object> getParameters() {
-                return Collections.unmodifiableList(Arrays.asList(this.params.values()));
+            public Map<Integer, Object> getParameters() {
+                return Collections.unmodifiableMap(this.params);
             }
         };
     }

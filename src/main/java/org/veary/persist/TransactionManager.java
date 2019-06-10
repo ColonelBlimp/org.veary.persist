@@ -24,6 +24,8 @@
 
 package org.veary.persist;
 
+import java.util.List;
+
 public interface TransactionManager {
 
     void beginTransaction();
@@ -31,4 +33,14 @@ public interface TransactionManager {
     void persist(Statement statement);
 
     void commitTransaction();
+
+    List<Integer> getGeneratedIds();
+
+    /**
+     * Returns the row count for SQL Data Manipulation Language (DML) statements, or 0 for SQL
+     * statements that return nothing.
+     *
+     * @return int
+     */
+    int getRowCount();
 }

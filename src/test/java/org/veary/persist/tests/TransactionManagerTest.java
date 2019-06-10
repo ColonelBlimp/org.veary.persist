@@ -30,6 +30,8 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import org.veary.persist.QueryBuilder;
+import org.veary.persist.Statement;
 import org.veary.persist.TransactionManager;
 import org.veary.persist.internal.GuicePersistModule;
 
@@ -60,31 +62,30 @@ public class TransactionManagerTest {
     }
 
     @Test
-    public void createTransaction() {
+    public void processTransaction() {
         final TransactionManager manager = this.injector.getInstance(TransactionManager.class);
         Assert.assertNotNull(manager);
-        /*
-        final Transaction transaction = manager.getTransaction();
-        Assert.assertNotNull(transaction);
-        
-        final QueryBuilder queryBuilder = QueryBuilder.newInstance(
+
+        manager.beginTransaction();
+
+        QueryBuilder createTableBuilder = QueryBuilder.newInstance(
             "CREATE TABLE IF NOT EXISTS debs.account(id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255))");
-        
-        final Statement createTable = transaction.create(queryBuilder);
-        Assert.assertNotNull(createTable);
-        final int result = createTable.persistRowCount();
-        System.out.println(">>> " + result);
-        transaction.commit();
-        */
-        /*
-        manager.getTransaction().start();
-        final QueryBuilder accountBuilder = QueryBuilder.newInstance(
-            "INSERT INTO debs.account VALUES(name=?)");
-        final UpdateQuery accountInsert = manager.createQuery(accountBuilder);
-        Assert.assertNotNull(accountInsert);
-        accountInsert.setParameter(1, "CASH");
-        accountInsert.persist();
-        manager.getTransaction().commit();
-        */
+        Statement createTable = Statement.newInstance(createTableBuilder);
+        manager.persist(createTable);
+        manager.commitTransaction();
+
+        manager.beginTransaction();
+
+        QueryBuilder insertAccount = QueryBuilder
+            .newInstance("INSERT INTO debs.account(name) VALUES(?)");
+        Statement createAccountOne = Statement.newInstance(insertAccount);
+        createAccountOne.setParameter(1, "CASH");
+        manager.persist(createAccountOne);
+
+        Statement createAccountTwo = Statement.newInstance(insertAccount);
+        createAccountTwo.setParameter(1, "EXPENSE");
+        manager.persist(createAccountTwo);
+
+        manager.commitTransaction();
     }
 }

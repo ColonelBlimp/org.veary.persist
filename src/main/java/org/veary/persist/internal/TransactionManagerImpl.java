@@ -30,6 +30,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.sql.DataSource;
@@ -44,7 +45,7 @@ public final class TransactionManagerImpl implements TransactionManager {
     private boolean txActive;
     private final List<Statement> statements;
     private int rowCountResult;
-    private int generatedIdResult;
+    private List<Integer> generatedIds;
 
     @Inject
     public TransactionManagerImpl(DataSource ds) {
@@ -54,6 +55,12 @@ public final class TransactionManagerImpl implements TransactionManager {
 
     @Override
     public void beginTransaction() {
+        if (this.txActive) {
+            throw new IllegalStateException("Transaction already active.");
+        }
+
+        this.generatedIds = new ArrayList<>();
+        this.rowCountResult = 0;
         this.txActive = true;
     }
 
@@ -71,18 +78,18 @@ public final class TransactionManagerImpl implements TransactionManager {
             for (Statement statement : this.statements) {
                 try (PreparedStatement pstmt = conn.prepareStatement(statement.getStatement(),
                     PreparedStatement.RETURN_GENERATED_KEYS)) {
-                    int index = 1;
-                    for (final Object param : statement.getParameters()) {
-                        pstmt.setObject(index++, param);
+                    for (Map.Entry<Integer, Object> entry : statement.getParameters()
+                        .entrySet()) {
+                        pstmt.setObject(entry.getKey().intValue(), entry.getValue());
                     }
 
                     this.rowCountResult = pstmt.executeUpdate();
 
                     try (ResultSet rset = pstmt.getGeneratedKeys()) {
                         if (rset.isBeforeFirst()) {
-                            this.generatedIdResult = 0;
-                        } else {
-
+                            while (rset.next()) {
+                                this.generatedIds.add(Integer.valueOf(rset.getInt(1)));
+                            }
                         }
                     }
                 }
@@ -91,10 +98,26 @@ public final class TransactionManagerImpl implements TransactionManager {
         } catch (final SQLException e) {
             throw new PersistenceException(e);
         }
+
+        this.txActive = false;
     }
 
     @Override
     public void persist(Statement statement) {
+        if (!this.txActive) {
+            throw new IllegalStateException(
+                "No active transaction. Call TransactionManager.beginTransaction() first.");
+        }
         this.statements.add(statement);
+    }
+
+    @Override
+    public List<Integer> getGeneratedIds() {
+        return this.generatedIds;
+    }
+
+    @Override
+    public int getRowCount() {
+        return this.rowCountResult;
     }
 }
