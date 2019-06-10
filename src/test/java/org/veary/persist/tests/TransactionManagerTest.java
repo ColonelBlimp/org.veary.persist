@@ -94,7 +94,7 @@ public class TransactionManagerTest {
 
     @Test(
         expectedExceptions = IllegalStateException.class,
-        expectedExceptionsMessageRegExp = "No active transaction. Call TransactionManager.beginTransaction\\(\\) first.")
+        expectedExceptionsMessageRegExp = "No active transaction.")
     public void exceptionCommitBeforeBegin() {
         final TransactionManager manager = this.injector.getInstance(TransactionManager.class);
         Assert.assertNotNull(manager);
@@ -109,5 +109,31 @@ public class TransactionManagerTest {
         Assert.assertNotNull(manager);
         manager.beginTransaction();
         manager.persist(null);
+    }
+
+    @Test(expectedExceptions = IllegalStateException.class,
+        expectedExceptionsMessageRegExp = "Transaction already active.")
+    public void activeTransactionException() {
+        final TransactionManager manager = this.injector.getInstance(TransactionManager.class);
+        Assert.assertNotNull(manager);
+        manager.beginTransaction();
+        manager.beginTransaction();
+    }
+
+    @Test(expectedExceptions = IllegalStateException.class,
+        expectedExceptionsMessageRegExp = "No active transaction.")
+    public void commitTxNotActiveException() {
+        final TransactionManager manager = this.injector.getInstance(TransactionManager.class);
+        Assert.assertNotNull(manager);
+        manager.commitTransaction();
+    }
+
+    @Test(expectedExceptions = IllegalStateException.class,
+        expectedExceptionsMessageRegExp = "Nothing to commit.")
+    public void noStatementsException() {
+        final TransactionManager manager = this.injector.getInstance(TransactionManager.class);
+        Assert.assertNotNull(manager);
+        manager.beginTransaction();
+        manager.commitTransaction();
     }
 }

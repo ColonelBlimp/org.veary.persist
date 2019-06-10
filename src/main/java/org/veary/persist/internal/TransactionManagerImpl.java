@@ -29,6 +29,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -52,6 +53,7 @@ public final class TransactionManagerImpl implements TransactionManager {
     public TransactionManagerImpl(DataSource ds) {
         this.ds = ds;
         this.statements = new ArrayList<>();
+        this.generatedIds = Collections.emptyList();
     }
 
     @Override
@@ -67,6 +69,9 @@ public final class TransactionManagerImpl implements TransactionManager {
 
     @Override
     public void commitTransaction() {
+        if (!this.txActive) {
+            throw new IllegalStateException("No active transaction.");
+        }
         if (this.statements.isEmpty()) {
             throw new IllegalStateException("Nothing to commit.");
         }
@@ -102,8 +107,7 @@ public final class TransactionManagerImpl implements TransactionManager {
     @Override
     public void persist(Statement statement) {
         if (!this.txActive) {
-            throw new IllegalStateException(
-                "No active transaction. Call TransactionManager.beginTransaction() first.");
+            throw new IllegalStateException("No active transaction.");
         }
         this.statements.add(Objects.requireNonNull(statement, "Statement cannot be null."));
     }

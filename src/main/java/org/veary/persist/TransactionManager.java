@@ -28,6 +28,12 @@ import java.util.List;
 
 public interface TransactionManager {
 
+    /**
+     * Marks the start of a transaction.
+     *
+     * @throws IllegalStateException if this method is called from this manager while another is
+     * still active
+     */
     void beginTransaction();
 
     void persist(Statement statement);
