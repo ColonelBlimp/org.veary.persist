@@ -40,8 +40,8 @@ import java.util.Objects;
 import javax.sql.DataSource;
 
 import org.veary.persist.Entity;
-import org.veary.persist.QueryBuilder;
-import org.veary.persist.SelectQuery;
+import org.veary.persist.SqlBuilder;
+import org.veary.persist.Query;
 import org.veary.persist.exceptions.NoResultException;
 import org.veary.persist.exceptions.NonUniqueResultException;
 import org.veary.persist.exceptions.PersistenceException;
@@ -52,13 +52,13 @@ import org.veary.persist.exceptions.PersistenceException;
  * @author Marc L. Veary
  * @since 1.0
  */
-public final class SelectQueryImpl implements SelectQuery {
+public final class SelectQueryImpl implements Query {
 
     private static final String SELECT_STR = "SELECT";
     private static final String ENTITY_FACTORY_METHOD = "newInstance";
 
     private final DataSource ds;
-    private final QueryBuilder queryBuilder;
+    private final SqlBuilder queryBuilder;
     private final Class<?> entityInterface;
     private final Map<String, Object> parameters;
 
@@ -71,7 +71,7 @@ public final class SelectQueryImpl implements SelectQuery {
      * @param builder
      * @param iface
      */
-    public SelectQueryImpl(DataSource ds, QueryBuilder builder,
+    public SelectQueryImpl(DataSource ds, SqlBuilder builder,
         Class<?> iface) {
         this.ds = Objects.requireNonNull(ds,
             Messages.getString("SelectQueryImpl.error_msg_ds_null"));
@@ -83,7 +83,7 @@ public final class SelectQueryImpl implements SelectQuery {
     }
 
     @Override
-    public SelectQuery setParameter(int index, Object value) {
+    public Query setParameter(int index, Object value) {
         if (index < 1) {
             throw new IllegalArgumentException(
                 Messages.getString("SelectQueryImpl.error_msg_invalid_index"));
@@ -95,7 +95,7 @@ public final class SelectQueryImpl implements SelectQuery {
     }
 
     @Override
-    public SelectQuery execute() {
+    public Query execute() {
         if (!this.queryBuilder.toString().startsWith(SELECT_STR)) {
             throw new IllegalStateException(
                 Messages.getString("SelectQueryImpl.error_msg_incorrect_query_type"));

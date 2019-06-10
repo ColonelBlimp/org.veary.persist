@@ -29,9 +29,9 @@ import java.util.Objects;
 import javax.inject.Inject;
 import javax.sql.DataSource;
 
-import org.veary.persist.QueryBuilder;
+import org.veary.persist.SqlBuilder;
 import org.veary.persist.QueryManager;
-import org.veary.persist.SelectQuery;
+import org.veary.persist.Query;
 
 public final class QueryManagerImpl implements QueryManager {
 
@@ -44,7 +44,7 @@ public final class QueryManagerImpl implements QueryManager {
     }
 
     @Override
-    public SelectQuery createQuery(QueryBuilder builder, Class<?> iface) {
+    public Query createQuery(SqlBuilder builder, Class<?> iface) {
         return new SelectQueryImpl(this.ds, builder, iface);
     }
 }

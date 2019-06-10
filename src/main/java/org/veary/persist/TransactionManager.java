@@ -26,21 +26,63 @@ package org.veary.persist;
 
 import java.util.List;
 
+/**
+ * <h2>Purpose:</h2> handles transactions through JDBC.
+ *
+ * <h2>Usage:</h2>
+ *
+ * <pre>
+ * SqlBuilder builder = SqlBuilder.newInstance("INSERT INTO schema.table(name) VALUES(?)");
+ * SqlStatement statement = SqlStatement.newInstance(builder);
+ * statement.setParameter(1, "CASH");
+ *
+ * TransactionManager manager = injector.getInstance(TransactionManager.class);
+ * manager.begin();
+ * manager.persist(statement)
+ * manager.commit();
+ * </pre>
+ *
+ * The following two method will return the results for a call to {@code commit()}:
+ *
+ * <pre>
+ * int rowCount = manager.getRowCount();
+ * List<Integer> ids = manager.getGeneratedIdList();
+ * </pre>
+ *
+ * <p>However, the results of a call to {@code commit()} are reset upon a call to
+ * {@code begin()}. <h2>Rollback:</h2>
+ *
+ * <p>The manager automaticall handles rollback if there is an error.
+ *
+ * @author Marc L. Veary
+ * @since 1.0
+ */
 public interface TransactionManager {
 
     /**
-     * Marks the start of a transaction.
-     *
-     * @throws IllegalStateException if this method is called from this manager while another is
-     * still active
+     * Mark the start of a transaction.
      */
-    void beginTransaction();
+    void begin();
 
-    void persist(Statement statement);
+    /**
+     * Persists the designated {@code SqlStatement} to the JDBC driver.
+     *
+     * @param statement {@link SqlStatement}
+     */
+    void persist(SqlStatement statement);
 
-    void commitTransaction();
+    /**
+     * Commits all the persisted
+     */
+    void commit();
 
-    List<Integer> getGeneratedIds();
+    /**
+     * Returns a {@code List<Integer>} of the generated ids from the transaction. The id's are in
+     * the same order as calls to {@code persis(...)}.
+     *
+     * @return {@code List<Integer>}
+     */
+    List<Integer> getGeneratedIdList();
 
     /**
      * Returns the row count for SQL Data Manipulation Language (DML) statements, or 0 for SQL

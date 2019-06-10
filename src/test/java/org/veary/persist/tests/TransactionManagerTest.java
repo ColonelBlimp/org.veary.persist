@@ -30,8 +30,8 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import org.veary.persist.QueryBuilder;
-import org.veary.persist.Statement;
+import org.veary.persist.SqlBuilder;
+import org.veary.persist.SqlStatement;
 import org.veary.persist.TransactionManager;
 import org.veary.persist.internal.GuicePersistModule;
 
@@ -66,30 +66,30 @@ public class TransactionManagerTest {
         final TransactionManager manager = this.injector.getInstance(TransactionManager.class);
         Assert.assertNotNull(manager);
 
-        manager.beginTransaction();
+        manager.begin();
 
-        QueryBuilder createTableBuilder = QueryBuilder.newInstance(
+        SqlBuilder createTableBuilder = SqlBuilder.newInstance(
             "CREATE TABLE IF NOT EXISTS debs.account(id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255))");
-        Statement createTable = Statement.newInstance(createTableBuilder);
+        SqlStatement createTable = SqlStatement.newInstance(createTableBuilder);
         manager.persist(createTable);
-        manager.commitTransaction();
+        manager.commit();
 
-        manager.beginTransaction();
+        manager.begin();
 
-        QueryBuilder insertAccount = QueryBuilder
+        SqlBuilder insertAccount = SqlBuilder
             .newInstance("INSERT INTO debs.account(name) VALUES(?)");
-        Statement createAccountOne = Statement.newInstance(insertAccount);
+        SqlStatement createAccountOne = SqlStatement.newInstance(insertAccount);
         createAccountOne.setParameter(1, "CASH");
         manager.persist(createAccountOne);
 
-        Statement createAccountTwo = Statement.newInstance(insertAccount);
+        SqlStatement createAccountTwo = SqlStatement.newInstance(insertAccount);
         createAccountTwo.setParameter(1, "EXPENSE");
         manager.persist(createAccountTwo);
 
-        manager.commitTransaction();
+        manager.commit();
 
         Assert.assertTrue(manager.getRowCount() == 1);
-        Assert.assertTrue(manager.getGeneratedIds().size() == 2);
+        Assert.assertTrue(manager.getGeneratedIdList().size() == 2);
     }
 
     @Test(
@@ -107,7 +107,7 @@ public class TransactionManagerTest {
     public void exceptionNullStatement() {
         final TransactionManager manager = this.injector.getInstance(TransactionManager.class);
         Assert.assertNotNull(manager);
-        manager.beginTransaction();
+        manager.begin();
         manager.persist(null);
     }
 
@@ -116,8 +116,8 @@ public class TransactionManagerTest {
     public void activeTransactionException() {
         final TransactionManager manager = this.injector.getInstance(TransactionManager.class);
         Assert.assertNotNull(manager);
-        manager.beginTransaction();
-        manager.beginTransaction();
+        manager.begin();
+        manager.begin();
     }
 
     @Test(expectedExceptions = IllegalStateException.class,
@@ -125,7 +125,7 @@ public class TransactionManagerTest {
     public void commitTxNotActiveException() {
         final TransactionManager manager = this.injector.getInstance(TransactionManager.class);
         Assert.assertNotNull(manager);
-        manager.commitTransaction();
+        manager.commit();
     }
 
     @Test(expectedExceptions = IllegalStateException.class,
@@ -133,7 +133,7 @@ public class TransactionManagerTest {
     public void noStatementsException() {
         final TransactionManager manager = this.injector.getInstance(TransactionManager.class);
         Assert.assertNotNull(manager);
-        manager.beginTransaction();
-        manager.commitTransaction();
+        manager.begin();
+        manager.commit();
     }
 }

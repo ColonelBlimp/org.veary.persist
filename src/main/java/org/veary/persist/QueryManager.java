@@ -26,5 +26,5 @@ package org.veary.persist;
 
 public interface QueryManager {
 
-    SelectQuery createQuery(QueryBuilder builder, Class<?> iface);
+    Query createQuery(SqlBuilder builder, Class<?> iface);
 }

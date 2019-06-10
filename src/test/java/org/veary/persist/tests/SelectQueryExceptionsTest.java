@@ -26,15 +26,12 @@ package org.veary.persist.tests;
 
 import java.io.File;
 
-import javax.swing.text.html.parser.Entity;
-
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import org.veary.persist.QueryBuilder;
 import org.veary.persist.QueryManager;
-import org.veary.persist.SelectQuery;
+import org.veary.persist.SqlBuilder;
 import org.veary.persist.internal.GuicePersistModule;
 import org.veary.persist.internal.SelectQueryImpl;
 
@@ -70,7 +67,7 @@ public class SelectQueryExceptionsTest {
     public void constructorNullInterfaceException() {
         final QueryManager manager = this.injector.getInstance(QueryManager.class);
         Assert.assertNotNull(manager);
-        manager.createQuery(QueryBuilder.newInstance("SELECT * FROM ?"), null);
+        manager.createQuery(SqlBuilder.newInstance("SELECT * FROM ?"), null);
     }
 
     @Test(
@@ -89,13 +86,14 @@ public class SelectQueryExceptionsTest {
         new SelectQueryImpl(null, null, null);
     }
 
+    /*
     @Test(
         expectedExceptions = IllegalArgumentException.class,
         expectedExceptionsMessageRegExp = "SelectQuery.setParameter index starts a 1.")
     public void constructorSetParameterInvalidIndexException() {
         final QueryManager manager = this.injector.getInstance(QueryManager.class);
         Assert.assertNotNull(manager);
-        final SelectQuery query = manager.createQuery(QueryBuilder.newInstance("SELECT * FROM ?"),
+        final SelectQuery query = manager.createQuery(SqlBuilder.newInstance("SELECT * FROM ?"),
             Entity.class);
         Assert.assertNotNull(query);
         query.setParameter(0, "VALUE");
@@ -107,25 +105,24 @@ public class SelectQueryExceptionsTest {
     public void constructorSetParameterNullValueException() {
         final QueryManager manager = this.injector.getInstance(QueryManager.class);
         Assert.assertNotNull(manager);
-        final SelectQuery query = manager.createQuery(QueryBuilder.newInstance("SELECT * FROM ?"),
+        final SelectQuery query = manager.createQuery(SqlBuilder.newInstance("SELECT * FROM ?"),
             Entity.class);
         Assert.assertNotNull(query);
         query.setParameter(1, null);
     }
-
+    
     @Test(
         expectedExceptions = IllegalStateException.class,
         expectedExceptionsMessageRegExp = "SelectQuery.execute incorrect query type. Use SELECT.")
     public void constructorExecuteTypeException() {
         final QueryManager manager = this.injector.getInstance(QueryManager.class);
         Assert.assertNotNull(manager);
-        final SelectQuery query = manager.createQuery(QueryBuilder.newInstance("INSERT INTO"),
+        final SelectQuery query = manager.createQuery(SqlBuilder.newInstance("INSERT INTO"),
             Entity.class);
         Assert.assertNotNull(query);
         query.execute();
     }
-
-    /*
+    
     @Test(
         expectedExceptions = NoResultException.class,
         expectedExceptionsMessageRegExp = "SelectQuery.execute did not return any results.")

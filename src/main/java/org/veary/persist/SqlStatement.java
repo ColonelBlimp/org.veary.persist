@@ -28,24 +28,54 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public interface Statement {
+/**
+ * Represents a parameterized SQL statement used to populate a {@code PreparedStatement} object
+ * internally.
+ *
+ * @author Marc L. Veary
+ * @since 1.0
+ */
+public interface SqlStatement {
 
-    Statement setParameter(int index, Object value);
+    /**
+     * Sets the value of the designated parameter using the given object.
+     *
+     * @param index the first parameter is 1, the second is 2, ...
+     * @param value the object containing the input parameter value
+     * @return the value of the {@code SqlStatement} itself
+     */
+    SqlStatement setParameter(int index, Object value);
 
+    /**
+     * Returns an SQL statement that may contain one or more '?' IN parameter placeholders.
+     *
+     * @return {@code String}
+     */
     String getStatement();
 
+    /**
+     * Returns a {@code Map<Integer, Object>} for the
+     *
+     * @return
+     */
     Map<Integer, Object> getParameters();
 
-    static Statement newInstance(QueryBuilder queryBuilder) {
-        final String stmt = queryBuilder.toString();
+    /**
+     * Static factory method for creating instances of this interface.
+     *
+     * @param builder {@link SqlBuilder} object
+     * @return a new {@code SqlStatement} object
+     */
+    static SqlStatement newInstance(SqlBuilder builder) {
+        final String stmt = builder.toString();
 
-        return new Statement() {
+        return new SqlStatement() {
 
             private String statement = stmt;
             private Map<Integer, Object> params = new HashMap<>();
 
             @Override
-            public Statement setParameter(int index, Object value) {
+            public SqlStatement setParameter(int index, Object value) {
                 this.params.put(Integer.valueOf(index), value);
                 return this;
             }

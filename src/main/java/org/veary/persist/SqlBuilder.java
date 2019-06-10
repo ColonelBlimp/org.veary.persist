@@ -24,22 +24,48 @@
 
 package org.veary.persist;
 
-import java.util.List;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.util.Objects;
 
-public interface SelectQuery {
+/**
+ * Currently, the prupose of this interface is as a variable binding mechanism for SQL
+ * statements.
+ *
+ * <p>In the future, this could be expanded to provide a basic query building framework.
+ *
+ * @author Marc L. Veary
+ * @since 1.0
+ */
+public interface SqlBuilder {
 
     /**
-     * Sets the value of the designated index using the given object.
+     * Static factory method.
      *
-     * @param index the first parameter is 1, the second is 2, ...
-     * @param value the object containing the input parameter value
-     * @return the current {@code Transaction} object
+     * @param sql {@code String}
+     * @return an {@code SqlBuilder} instance
      */
-    SelectQuery setParameter(int index, Object value);
+    static SqlBuilder newInstance(String sql) {
+        Objects.requireNonNull(sql, "SQL parameter cannot be null.");
+        if ("".equals(sql)) {
+            throw new IllegalArgumentException("SQL parameter must be non-empty.");
+        }
 
-    SelectQuery execute();
+        return new SqlBuilder() {
+            @Override
+            public String toString() {
+                return sql;
+            }
+        };
+    }
 
-    Object getSingleResult();
-
-    List<? extends Entity> getResultList();
+    /**
+     * Returns a string representation of an SQL statement built by this builder. This can be
+     * passed into methods such as {@link SqlStatement}, {@link Statement} or
+     * {@link PreparedStatement}
+     *
+     * @return cannot return {@code null} or empty string
+     */
+    @Override
+    String toString();
 }

@@ -37,18 +37,29 @@ import java.util.Objects;
 import javax.inject.Inject;
 import javax.sql.DataSource;
 
-import org.veary.persist.Statement;
+import org.veary.persist.SqlStatement;
 import org.veary.persist.TransactionManager;
 import org.veary.persist.exceptions.PersistenceException;
 
+/**
+ * Concrete implementation of the {@link TransactionManager} interface.
+ *
+ * @author Marc L. Veary
+ * @since 1.0
+ */
 public final class TransactionManagerImpl implements TransactionManager {
 
     private final DataSource ds;
     private boolean txActive;
-    private final List<Statement> statements;
+    private final List<SqlStatement> statements;
     private int rowCountResult;
     private List<Integer> generatedIds;
 
+    /**
+     * Constructor.
+     *
+     * @param ds {@link DataSource}
+     */
     @Inject
     public TransactionManagerImpl(DataSource ds) {
         this.ds = ds;
@@ -57,7 +68,7 @@ public final class TransactionManagerImpl implements TransactionManager {
     }
 
     @Override
-    public void beginTransaction() {
+    public void begin() {
         if (this.txActive) {
             throw new IllegalStateException("Transaction already active.");
         }
@@ -68,7 +79,7 @@ public final class TransactionManagerImpl implements TransactionManager {
     }
 
     @Override
-    public void commitTransaction() {
+    public void commit() {
         if (!this.txActive) {
             throw new IllegalStateException("No active transaction.");
         }
@@ -81,7 +92,7 @@ public final class TransactionManagerImpl implements TransactionManager {
             AutoSetAutoCommit auto = new AutoSetAutoCommit(conn);
             AutoRollback tx = new AutoRollback(conn)) {
 
-            for (Statement statement : this.statements) {
+            for (SqlStatement statement : this.statements) {
                 try (PreparedStatement pstmt = conn.prepareStatement(statement.getStatement(),
                     PreparedStatement.RETURN_GENERATED_KEYS)) {
                     for (Map.Entry<Integer, Object> entry : statement.getParameters()
@@ -105,7 +116,7 @@ public final class TransactionManagerImpl implements TransactionManager {
     }
 
     @Override
-    public void persist(Statement statement) {
+    public void persist(SqlStatement statement) {
         if (!this.txActive) {
             throw new IllegalStateException("No active transaction.");
         }
@@ -113,7 +124,7 @@ public final class TransactionManagerImpl implements TransactionManager {
     }
 
     @Override
-    public List<Integer> getGeneratedIds() {
+    public List<Integer> getGeneratedIdList() {
         return this.generatedIds;
     }
 
