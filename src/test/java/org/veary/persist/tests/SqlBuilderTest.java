@@ -22,43 +22,24 @@
  * SOFTWARE.
  */
 
-package org.veary.persist.internal;
+package org.veary.persist.tests;
 
-import java.util.Objects;
-
-import javax.inject.Inject;
-import javax.sql.DataSource;
-
-import org.veary.persist.Query;
-import org.veary.persist.QueryManager;
+import org.testng.annotations.Test;
 import org.veary.persist.SqlBuilder;
 
-/**
- * Concrete implementation of {@link QueryManager}.
- *
- * @author Marc L. Veary
- * @since 1.0
- */
-public final class QueryManagerImpl implements QueryManager {
+public class SqlBuilderTest {
 
-    private final DataSource ds;
-
-    /**
-     * Constructor.
-     *
-     * @param ds {@link DataSource}
-     */
-    @Inject
-    public QueryManagerImpl(DataSource ds) {
-        this.ds = Objects.requireNonNull(ds,
-            Messages.getString("QueryManagerImpl.error_msg_ds_null"));
+    @Test(
+        expectedExceptions = NullPointerException.class,
+        expectedExceptionsMessageRegExp = "String parameter cannot be null.")
+    public void nullParameterException() {
+        SqlBuilder.newInstance(null);
     }
 
-    @Override
-    public Query createQuery(SqlBuilder builder, Class<?> entityInterface) {
-        return new QueryImpl(this.ds, Objects.requireNonNull(builder,
-            Messages.getString("QueryManagerImpl.error_msg_builder_null")),
-            Objects.requireNonNull(entityInterface,
-                Messages.getString("QueryManagerImpl.error_msg_iface_null")));
+    @Test(
+        expectedExceptions = IllegalArgumentException.class,
+        expectedExceptionsMessageRegExp = "String parameter must be non-empty.")
+    public void emptyParameterException() {
+        SqlBuilder.newInstance("");
     }
 }

@@ -73,8 +73,26 @@ public class QueryManagerTest {
 
     @Test(
         expectedExceptions = NullPointerException.class,
-        expectedExceptionsMessageRegExp = "QueryManger.DataSource parameter is null.")
+        expectedExceptionsMessageRegExp = "DataSource parameter is null.")
     public void queryManagerNullDataSourceException() {
         new QueryManagerImpl(null);
+    }
+
+    @Test(
+        expectedExceptions = NullPointerException.class,
+        expectedExceptionsMessageRegExp = "SqlBuilder parameter is null.")
+    public void queryManagerNullBuilder() {
+        final QueryManager manager = this.injector.getInstance(QueryManager.class);
+        Assert.assertNotNull(manager);
+        manager.createQuery(null, null);
+    }
+
+    @Test(
+        expectedExceptions = NullPointerException.class,
+        expectedExceptionsMessageRegExp = "Class interface parameter is null.")
+    public void queryManagerNullInterface() {
+        final QueryManager manager = this.injector.getInstance(QueryManager.class);
+        Assert.assertNotNull(manager);
+        manager.createQuery(SqlBuilder.newInstance("SELECT * FROM ?"), null);
     }
 }

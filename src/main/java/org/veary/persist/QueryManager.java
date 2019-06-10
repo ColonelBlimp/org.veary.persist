@@ -24,7 +24,19 @@
 
 package org.veary.persist;
 
+/**
+ *
+ * @author Marc L. Veary
+ * @since 1.0
+ */
 public interface QueryManager {
 
-    Query createQuery(SqlBuilder builder, Class<?> iface);
+    /**
+     * Creates a {@code Query}.
+     *
+     * @param builder {@link SqlBuilder}
+     * @param entityInterface the interface of the entity to be returned
+     * @return an instance of a {@link Query} object
+     */
+    Query createQuery(SqlBuilder builder, Class<?> entityInterface);
 }

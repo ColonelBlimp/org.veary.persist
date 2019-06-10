@@ -46,9 +46,9 @@ public interface SqlBuilder {
      * @return an {@code SqlBuilder} instance
      */
     static SqlBuilder newInstance(String sql) {
-        Objects.requireNonNull(sql, "SQL parameter cannot be null.");
+        Objects.requireNonNull(sql, "String parameter cannot be null.");
         if ("".equals(sql)) {
-            throw new IllegalArgumentException("SQL parameter must be non-empty.");
+            throw new IllegalArgumentException("String parameter must be non-empty.");
         }
 
         return new SqlBuilder() {

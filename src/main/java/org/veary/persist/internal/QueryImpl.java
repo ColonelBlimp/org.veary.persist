@@ -39,26 +39,25 @@ import java.util.Objects;
 
 import javax.sql.DataSource;
 
-import org.veary.persist.Entity;
-import org.veary.persist.SqlBuilder;
 import org.veary.persist.Query;
+import org.veary.persist.SqlBuilder;
 import org.veary.persist.exceptions.NoResultException;
 import org.veary.persist.exceptions.NonUniqueResultException;
 import org.veary.persist.exceptions.PersistenceException;
 
 /**
- * Handles DML SELECT only.
+ * Handles SQL statement which return read and return 0 or more results in a {@link ResultSet}.
  *
  * @author Marc L. Veary
  * @since 1.0
  */
-public final class SelectQueryImpl implements Query {
+public final class QueryImpl implements Query {
 
     private static final String SELECT_STR = "SELECT";
     private static final String ENTITY_FACTORY_METHOD = "newInstance";
 
     private final DataSource ds;
-    private final SqlBuilder queryBuilder;
+    private final SqlBuilder builder;
     private final Class<?> entityInterface;
     private final Map<String, Object> parameters;
 
@@ -68,17 +67,16 @@ public final class SelectQueryImpl implements Query {
      * Constructor.
      *
      * @param ds {@link DataSource}
-     * @param builder
-     * @param iface
+     * @param builder {@link SqlBuilder}
+     * @param entityInterface the interface of the Entity class
      */
-    public SelectQueryImpl(DataSource ds, SqlBuilder builder,
-        Class<?> iface) {
+    public QueryImpl(DataSource ds, SqlBuilder builder, Class<?> entityInterface) {
         this.ds = Objects.requireNonNull(ds,
-            Messages.getString("SelectQueryImpl.error_msg_ds_null"));
-        this.queryBuilder = Objects.requireNonNull(builder,
-            Messages.getString("SelectQueryImpl.error_msg_builder_null"));
-        this.entityInterface = Objects.requireNonNull(iface,
-            Messages.getString("SelectQueryImpl.error_msg_iface_null"));
+            Messages.getString("QueryImpl.error_msg_ds_null")); //$NON-NLS-1$
+        this.builder = Objects.requireNonNull(builder,
+            Messages.getString("QueryImpl.error_msg_builder_null")); //$NON-NLS-1$
+        this.entityInterface = Objects.requireNonNull(entityInterface,
+            Messages.getString("QueryImpl.error_msg_iface_null")); //$NON-NLS-1$
         this.parameters = new HashMap<>();
     }
 
@@ -86,23 +84,22 @@ public final class SelectQueryImpl implements Query {
     public Query setParameter(int index, Object value) {
         if (index < 1) {
             throw new IllegalArgumentException(
-                Messages.getString("SelectQueryImpl.error_msg_invalid_index"));
+                Messages.getString("QueryImpl.error_msg_invalid_index")); //$NON-NLS-1$
         }
-        this.parameters.put(String.valueOf(index),
-            Objects.requireNonNull(value,
-                Messages.getString("SelectQueryImpl.error_msg_invalid_value")));
+        this.parameters.put(String.valueOf(index), Objects.requireNonNull(value,
+            Messages.getString("QueryImpl.error_msg_null_value"))); //$NON-NLS-1$
         return this;
     }
 
     @Override
     public Query execute() {
-        if (!this.queryBuilder.toString().startsWith(SELECT_STR)) {
+        if (!this.builder.toString().startsWith(SELECT_STR)) {
             throw new IllegalStateException(
-                Messages.getString("SelectQueryImpl.error_msg_incorrect_query_type"));
+                Messages.getString("QueryImpl.error_msg_incorrect_query_type")); //$NON-NLS-1$
         }
 
         try (Connection conn = this.ds.getConnection()) {
-            try (PreparedStatement stmt = conn.prepareStatement(this.queryBuilder.toString())) {
+            try (PreparedStatement stmt = conn.prepareStatement(this.builder.toString())) {
 
                 for (final Map.Entry<String, Object> param : this.parameters.entrySet()) {
                     stmt.setObject(Integer.valueOf(param.getKey()), param.getValue());
@@ -123,19 +120,19 @@ public final class SelectQueryImpl implements Query {
     public Object getSingleResult() {
         if (this.internalResult == null) {
             throw new PersistenceException(
-                Messages.getString("SelectQueryImpl.error_msg_method_sequence")); //$NON-NLS-1$
+                Messages.getString("QueryImpl.error_msg_method_sequence")); //$NON-NLS-1$
         }
 
         if (this.internalResult.size() > 1) {
             throw new NonUniqueResultException(
-                Messages.getString("SelectQueryImpl.error_msg_too_many_results")); //$NON-NLS-1$
+                Messages.getString("QueryImpl.error_msg_too_many_results")); //$NON-NLS-1$
         }
 
         return getNewInstance(getStaticFactoryMethod(), this.internalResult.get(0));
     }
 
     @Override
-    public List<? extends Entity> getResultList() {
+    public List<?> getResultList() {
         return null;
     }
 
@@ -145,12 +142,12 @@ public final class SelectQueryImpl implements Query {
      * @param rset {@code ResultSet}
      * @return a {@code List<Map<String, Object>>}. Cannot return {@code null}.
      * @throws SQLException if there is an underlying SQL problem.
-     * @throws NoResultException if this {@code SelectQuery} did not return any results
+     * @throws NoResultException if this {@code Query} did not return any results
      */
     private List<Map<String, Object>> processResultSet(ResultSet rset) throws SQLException {
         if (!rset.isBeforeFirst()) {
             throw new NoResultException(
-                Messages.getString("SelectQueryImpl.error_msg_no_results"));
+                Messages.getString("QueryImpl.error_msg_no_results")); //$NON-NLS-1$
         }
 
         final ResultSetMetaData md = rset.getMetaData();
@@ -176,8 +173,7 @@ public final class SelectQueryImpl implements Query {
         }
     }
 
-    private Object getNewInstance(Method staticFactory,
-        Map<String, Object> result) {
+    private Object getNewInstance(Method staticFactory, Map<String, Object> result) {
         try {
             return staticFactory.invoke(this.entityInterface, result);
         } catch (IllegalAccessException | IllegalArgumentException

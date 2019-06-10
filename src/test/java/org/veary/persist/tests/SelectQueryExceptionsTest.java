@@ -33,7 +33,7 @@ import org.testng.annotations.Test;
 import org.veary.persist.QueryManager;
 import org.veary.persist.SqlBuilder;
 import org.veary.persist.internal.GuicePersistModule;
-import org.veary.persist.internal.SelectQueryImpl;
+import org.veary.persist.internal.QueryImpl;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -63,7 +63,7 @@ public class SelectQueryExceptionsTest {
 
     @Test(
         expectedExceptions = NullPointerException.class,
-        expectedExceptionsMessageRegExp = "SelectQuery.Class<\\?> parameter is null.")
+        expectedExceptionsMessageRegExp = "Class interface parameter is null.")
     public void constructorNullInterfaceException() {
         final QueryManager manager = this.injector.getInstance(QueryManager.class);
         Assert.assertNotNull(manager);
@@ -72,7 +72,7 @@ public class SelectQueryExceptionsTest {
 
     @Test(
         expectedExceptions = NullPointerException.class,
-        expectedExceptionsMessageRegExp = "SelectQuery.QueryBuilder parameter is null.")
+        expectedExceptionsMessageRegExp = "SqlBuilder parameter is null.")
     public void constructorNullQueryBuilderException() {
         final QueryManager manager = this.injector.getInstance(QueryManager.class);
         Assert.assertNotNull(manager);
@@ -81,9 +81,9 @@ public class SelectQueryExceptionsTest {
 
     @Test(
         expectedExceptions = NullPointerException.class,
-        expectedExceptionsMessageRegExp = "SelectQuery.DataSource parameter is null.")
+        expectedExceptionsMessageRegExp = "DataSource parameter is null.")
     public void constructorNullDataSourceException() {
-        new SelectQueryImpl(null, null, null);
+        new QueryImpl(null, null, null);
     }
 
     /*
@@ -98,7 +98,7 @@ public class SelectQueryExceptionsTest {
         Assert.assertNotNull(query);
         query.setParameter(0, "VALUE");
     }
-
+    
     @Test(
         expectedExceptions = NullPointerException.class,
         expectedExceptionsMessageRegExp = "SelectQuery.setParameter.Object parameter is null.")
@@ -110,7 +110,7 @@ public class SelectQueryExceptionsTest {
         Assert.assertNotNull(query);
         query.setParameter(1, null);
     }
-    
+
     @Test(
         expectedExceptions = IllegalStateException.class,
         expectedExceptionsMessageRegExp = "SelectQuery.execute incorrect query type. Use SELECT.")
@@ -122,7 +122,7 @@ public class SelectQueryExceptionsTest {
         Assert.assertNotNull(query);
         query.execute();
     }
-    
+
     @Test(
         expectedExceptions = NoResultException.class,
         expectedExceptionsMessageRegExp = "SelectQuery.execute did not return any results.")

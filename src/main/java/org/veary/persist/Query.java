@@ -41,5 +41,5 @@ public interface Query {
 
     Object getSingleResult();
 
-    List<? extends Entity> getResultList();
+    List<?> getResultList();
 }
