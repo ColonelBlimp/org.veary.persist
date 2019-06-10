@@ -24,9 +24,14 @@
 
 package org.veary.persist.internal;
 
+import org.veary.persist.QueryBuilder;
 import org.veary.persist.UpdateQuery;
 
 public final class UpdateQueryImpl implements UpdateQuery {
+
+    public UpdateQueryImpl(QueryBuilder queryBuilder) {
+
+    }
 
     @Override
     public UpdateQuery setParameter(int index, Object value) {

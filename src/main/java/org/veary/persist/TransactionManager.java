@@ -27,6 +27,4 @@ package org.veary.persist;
 public interface TransactionManager {
 
     Transaction getTransaction();
-
-    void persist(UpdateQuery updateQuery);
 }

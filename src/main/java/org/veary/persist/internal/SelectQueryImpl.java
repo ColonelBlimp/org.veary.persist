@@ -46,6 +46,12 @@ import org.veary.persist.exceptions.NoResultException;
 import org.veary.persist.exceptions.NonUniqueResultException;
 import org.veary.persist.exceptions.PersistenceException;
 
+/**
+ * Handles DML SELECT only.
+ *
+ * @author Marc L. Veary
+ * @since 1.0
+ */
 public final class SelectQueryImpl implements SelectQuery {
 
     private static final String SELECT_STR = "SELECT";
@@ -58,6 +64,13 @@ public final class SelectQueryImpl implements SelectQuery {
 
     private List<Map<String, Object>> internalResult;
 
+    /**
+     * Constructor.
+     *
+     * @param ds {@link DataSource}
+     * @param builder
+     * @param iface
+     */
     public SelectQueryImpl(DataSource ds, QueryBuilder builder,
         Class<?> iface) {
         this.ds = Objects.requireNonNull(ds,

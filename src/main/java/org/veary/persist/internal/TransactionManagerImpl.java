@@ -29,7 +29,6 @@ import javax.sql.DataSource;
 
 import org.veary.persist.Transaction;
 import org.veary.persist.TransactionManager;
-import org.veary.persist.UpdateQuery;
 
 public final class TransactionManagerImpl implements TransactionManager {
 
@@ -48,9 +47,5 @@ public final class TransactionManagerImpl implements TransactionManager {
             this.transaction = new TransactionImpl(this.ds);
         }
         return this.transaction;
-    }
-
-    @Override
-    public void persist(UpdateQuery updateQuery) {
     }
 }
