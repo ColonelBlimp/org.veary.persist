@@ -97,7 +97,7 @@ public final class QueryImpl implements Query {
 
     @Override
     public Query execute() {
-        if (!this.builder.toString().startsWith(SELECT_STR)) {
+        if (!this.builder.toString().toUpperCase().startsWith(SELECT_STR)) {
             throw new IllegalStateException(
                 Messages.getString("QueryImpl.error_msg_incorrect_query_type")); //$NON-NLS-1$
         }

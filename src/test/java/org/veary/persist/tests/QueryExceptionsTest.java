@@ -24,6 +24,9 @@
 
 package org.veary.persist.tests;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
 import java.io.File;
 
 import org.testng.Assert;
@@ -39,9 +42,6 @@ import org.veary.persist.exceptions.NoResultException;
 import org.veary.persist.exceptions.PersistenceException;
 import org.veary.persist.internal.GuicePersistModule;
 import org.veary.persist.internal.QueryImpl;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 import hthurow.tomcatjndi.TomcatJNDI;
 
@@ -152,7 +152,7 @@ public class QueryExceptionsTest {
     @Test(
         expectedExceptions = PersistenceException.class,
         expectedExceptionsMessageRegExp = "Invalid method call sequence.")
-    public void methodSequenceException() {
+    public void singleResultSequenceException() {
         final QueryManager manager = this.injector.getInstance(QueryManager.class);
         Assert.assertNotNull(manager);
         final Query query = manager.createQuery(
@@ -160,5 +160,18 @@ public class QueryExceptionsTest {
             String.class);
         Assert.assertNotNull(query);
         query.setParameter(1, Integer.valueOf(10)).getSingleResult();
+    }
+
+    @Test(
+        expectedExceptions = PersistenceException.class,
+        expectedExceptionsMessageRegExp = "Invalid method call sequence.")
+    public void listResultSequenceException() {
+        final QueryManager manager = this.injector.getInstance(QueryManager.class);
+        Assert.assertNotNull(manager);
+        final Query query = manager.createQuery(
+            SqlBuilder.newInstance("SELECT * FROM debs.account"),
+            String.class);
+        Assert.assertNotNull(query);
+        query.getResultList();
     }
 }

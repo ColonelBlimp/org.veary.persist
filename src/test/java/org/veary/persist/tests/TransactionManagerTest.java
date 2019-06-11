@@ -24,6 +24,9 @@
 
 package org.veary.persist.tests;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
 import java.io.File;
 
 import org.testng.Assert;
@@ -34,9 +37,6 @@ import org.veary.persist.SqlBuilder;
 import org.veary.persist.SqlStatement;
 import org.veary.persist.TransactionManager;
 import org.veary.persist.internal.GuicePersistModule;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 import hthurow.tomcatjndi.TomcatJNDI;
 
@@ -135,5 +135,17 @@ public class TransactionManagerTest {
         Assert.assertNotNull(manager);
         manager.begin();
         manager.commit();
+    }
+
+    @Test(
+        expectedExceptions = IllegalStateException.class,
+        expectedExceptionsMessageRegExp = "Incorrect query type.")
+    public void typeException() {
+        final TransactionManager manager = this.injector.getInstance(TransactionManager.class);
+        Assert.assertNotNull(manager);
+        manager.begin();
+        SqlBuilder select = SqlBuilder.newInstance("SELECT * FROM debs.account");
+        SqlStatement find = SqlStatement.newInstance(select);
+        manager.persist(find);
     }
 }

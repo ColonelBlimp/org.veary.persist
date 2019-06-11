@@ -49,6 +49,8 @@ import org.veary.persist.exceptions.PersistenceException;
  */
 public final class TransactionManagerImpl implements TransactionManager {
 
+    private static final String SELECT_STR = "SELECT";
+
     private final DataSource ds;
     private boolean txActive;
     private final List<SqlStatement> statements;
@@ -108,7 +110,12 @@ public final class TransactionManagerImpl implements TransactionManager {
         if (!this.txActive) {
             throw new IllegalStateException("No active transaction.");
         }
-        this.statements.add(Objects.requireNonNull(statement, "Statement cannot be null."));
+        Objects.requireNonNull(statement, "Statement cannot be null.");
+        if (statement.getStatement().toUpperCase().startsWith(SELECT_STR)) {
+            throw new IllegalStateException(
+                Messages.getString("QueryImpl.error_msg_incorrect_query_type")); //$NON-NLS-1$
+        }
+        this.statements.add(statement);
     }
 
     @Override

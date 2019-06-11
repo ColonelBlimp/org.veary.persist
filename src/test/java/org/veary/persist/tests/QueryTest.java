@@ -24,7 +24,11 @@
 
 package org.veary.persist.tests;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 
 import org.testng.Assert;
@@ -37,9 +41,6 @@ import org.veary.persist.SqlBuilder;
 import org.veary.persist.SqlStatement;
 import org.veary.persist.TransactionManager;
 import org.veary.persist.internal.GuicePersistModule;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 import hthurow.tomcatjndi.TomcatJNDI;
 
@@ -80,6 +81,11 @@ public class QueryTest {
         SqlStatement createAccountOne = SqlStatement.newInstance(insertAccount);
         createAccountOne.setParameter(1, "CASH");
         txManager.persist(createAccountOne);
+
+        SqlStatement createAccountTwo = SqlStatement.newInstance(insertAccount);
+        createAccountTwo.setParameter(1, "EXPENSE");
+        txManager.persist(createAccountTwo);
+
         txManager.commit();
 
         this.id = Long.valueOf(txManager.getGeneratedIdList().get(0).intValue());
@@ -98,6 +104,21 @@ public class QueryTest {
 
         Assert.assertNotNull(account);
         Assert.assertEquals(account.getName(), "CASH");
+    }
+
+    @Test
+    public void resultsList() {
+        final QueryManager manager = this.injector.getInstance(QueryManager.class);
+        Assert.assertNotNull(manager);
+        final Query query = manager.createQuery(
+            SqlBuilder.newInstance("SELECT * FROM debs.account"),
+            Account.class);
+        Assert.assertNotNull(query);
+        List<Object> list = query.execute().getResultList();
+        Assert.assertNotNull(list);
+        Assert.assertFalse(list.isEmpty());
+        Assert.assertTrue(list.size() == 2);
+        Assert.assertTrue(Account.class.isInstance(list.get(0)));
     }
 
     public interface Account {
