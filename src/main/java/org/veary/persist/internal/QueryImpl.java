@@ -70,9 +70,13 @@ public final class QueryImpl implements Query {
      * @param ds {@link DataSource}
      * @param builder {@link SqlBuilder}
      * @param entityInterface the interface of a class which is to be created (by Reflection) and
-     *     returned as the result(s). This interface must define a <b>static method</b> with the
-     *     signature: <pre> newInstance(Map&lt;String, Object&gt;) </pre> <p>Which should validate
-     *     the input {@code Map} and populate the instance's member fields.
+     *     returned as the result(s).
+     *
+     *     <p>This interface must define a <b>static method</b> with the signature: <pre>
+     *     newInstance(Map&lt;String, Object&gt;) </pre>
+     *
+     *     <p>Which should validate the input {@code Map} and populate the instance's member
+     *     fields.
      */
     public QueryImpl(DataSource ds, SqlBuilder builder, Class<?> entityInterface) {
         this.ds = Objects.requireNonNull(ds,

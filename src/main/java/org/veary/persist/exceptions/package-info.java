@@ -22,4 +22,7 @@
  * SOFTWARE.
  */
 
+/**
+ * Exceptions.
+ */
 package org.veary.persist.exceptions;

@@ -22,4 +22,7 @@
  * SOFTWARE.
  */
 
+/**
+ *
+ */
 package org.veary.persist;

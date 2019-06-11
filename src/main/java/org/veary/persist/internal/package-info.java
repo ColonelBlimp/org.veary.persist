@@ -22,4 +22,7 @@
  * SOFTWARE.
  */
 
+/**
+ * Internal implementation classes.
+ */
 package org.veary.persist.internal;
