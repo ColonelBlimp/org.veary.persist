@@ -32,6 +32,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,6 +109,7 @@ public final class QueryImpl implements Query {
                 try (ResultSet rset = stmt.executeQuery()) {
                     this.internalResult = processResultSet(rset);
                 }
+
             }
         } catch (final SQLException e) {
             throw new PersistenceException(e);
@@ -132,8 +134,13 @@ public final class QueryImpl implements Query {
     }
 
     @Override
-    public List<?> getResultList() {
-        return null;
+    public List<Object> getResultList() {
+        if (this.internalResult == null) {
+            throw new PersistenceException(
+                Messages.getString("QueryImpl.error_msg_method_sequence")); //$NON-NLS-1$
+        }
+
+        return Collections.emptyList();
     }
 
     /**
@@ -141,7 +148,7 @@ public final class QueryImpl implements Query {
      *
      * @param rset {@code ResultSet}
      * @return a {@code List<Map<String, Object>>}. Cannot return {@code null}.
-     * @throws SQLException if there is an underlying SQL problem.
+     * @throws SQLException if a database access error occurs
      * @throws NoResultException if this {@code Query} did not return any results
      */
     private List<Map<String, Object>> processResultSet(ResultSet rset) throws SQLException {

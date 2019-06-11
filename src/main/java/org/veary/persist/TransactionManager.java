@@ -42,17 +42,19 @@ import java.util.List;
  * manager.commit();
  * </pre>
  *
- * The following two method will return the results for a call to {@code commit()}:
+ * The following two methods will return the results for a call to {@code commit()}:
  *
  * <pre>
  * int rowCount = manager.getRowCount();
- * List<Integer> ids = manager.getGeneratedIdList();
+ * List&lt;Integer&gt; ids = manager.getGeneratedIdList();
  * </pre>
  *
  * <p>However, the results of a call to {@code commit()} are reset upon a call to
- * {@code begin()}. <h2>Rollback:</h2>
+ * {@code begin()}.
  *
- * <p>The manager automaticall handles rollback if there is an error.
+ * <h2>Rollback:</h2>
+ *
+ * <p>The manager automatically handles rollback if there is an error.
  *
  * @author Marc L. Veary
  * @since 1.0

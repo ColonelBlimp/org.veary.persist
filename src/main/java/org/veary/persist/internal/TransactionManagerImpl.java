@@ -31,7 +31,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import javax.inject.Inject;
@@ -92,19 +91,7 @@ public final class TransactionManagerImpl implements TransactionManager {
             AutoSetAutoCommit auto = new AutoSetAutoCommit(conn);
             AutoRollback tx = new AutoRollback(conn)) {
 
-            for (SqlStatement statement : this.statements) {
-                try (PreparedStatement pstmt = conn.prepareStatement(statement.getStatement(),
-                    PreparedStatement.RETURN_GENERATED_KEYS)) {
-                    for (Map.Entry<Integer, Object> entry : statement.getParameters()
-                        .entrySet()) {
-                        pstmt.setObject(entry.getKey().intValue(), entry.getValue());
-                    }
-
-                    this.rowCountResult = pstmt.executeUpdate();
-
-                    setGeneratedKeys(pstmt);
-                }
-            }
+            createStatementAndExecute(conn);
 
             tx.commit();
 
@@ -133,6 +120,32 @@ public final class TransactionManagerImpl implements TransactionManager {
         return this.rowCountResult;
     }
 
+    /**
+     * Creates a {@link PreparedStatement}, calls the {@link PreparedStatement#executeUpdate() and
+     * then process the generated keys (if there are any).
+     *
+     * @param conn {@link Connection}
+     * @throws SQLException if a database access error occurs
+     */
+    private void createStatementAndExecute(Connection conn) throws SQLException {
+        for (SqlStatement statement : this.statements) {
+            try (PreparedStatement pstmt = conn.prepareStatement(statement.getStatement(),
+                PreparedStatement.RETURN_GENERATED_KEYS)) {
+
+                this.rowCountResult = pstmt.executeUpdate();
+
+                setGeneratedKeys(pstmt);
+            }
+        }
+    }
+
+    /**
+     * Copies any generated keys from the designated {@code PreparedStatement} to a class member
+     * variable {@code List} which allows can be accessed.
+     *
+     * @param pstmt {@link PreparedStatement}
+     * @throws SQLException if a database access error occurs
+     */
     private void setGeneratedKeys(PreparedStatement pstmt) throws SQLException {
         try (ResultSet rset = pstmt.getGeneratedKeys()) {
             if (rset.isBeforeFirst()) {

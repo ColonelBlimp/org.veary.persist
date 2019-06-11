@@ -56,7 +56,7 @@ public interface SqlStatement {
     /**
      * Returns a {@code Map<Integer, Object>} for the
      *
-     * @return
+     * @return {@code Map<Integer, Object>}
      */
     Map<Integer, Object> getParameters();
 

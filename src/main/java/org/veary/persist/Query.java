@@ -41,5 +41,5 @@ public interface Query {
 
     Object getSingleResult();
 
-    List<?> getResultList();
+    List<Object> getResultList();
 }

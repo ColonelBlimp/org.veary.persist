@@ -25,6 +25,7 @@
 package org.veary.persist;
 
 /**
+ * <h2>Purpose:</h2> handles read statements through JDBC.
  *
  * @author Marc L. Veary
  * @since 1.0
