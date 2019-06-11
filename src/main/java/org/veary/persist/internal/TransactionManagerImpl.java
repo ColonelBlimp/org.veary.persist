@@ -31,6 +31,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.inject.Inject;
@@ -132,6 +133,11 @@ public final class TransactionManagerImpl implements TransactionManager {
         for (SqlStatement statement : this.statements) {
             try (PreparedStatement pstmt = conn.prepareStatement(statement.getStatement(),
                 PreparedStatement.RETURN_GENERATED_KEYS)) {
+
+                for (Map.Entry<Integer, Object> entry : statement.getParameters()
+                    .entrySet()) {
+                    pstmt.setObject(entry.getKey().intValue(), entry.getValue());
+                }
 
                 this.rowCountResult = pstmt.executeUpdate();
 
