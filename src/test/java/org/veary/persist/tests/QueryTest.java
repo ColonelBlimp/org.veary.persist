@@ -31,7 +31,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import org.veary.persist.Entity;
 import org.veary.persist.Query;
 import org.veary.persist.QueryManager;
 import org.veary.persist.SqlBuilder;
@@ -101,7 +100,9 @@ public class QueryTest {
         Assert.assertEquals(account.getName(), "CASH");
     }
 
-    public interface Account extends Entity {
+    public interface Account {
+
+        Long getId();
 
         String getName();
 

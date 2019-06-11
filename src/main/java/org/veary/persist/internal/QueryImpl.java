@@ -47,7 +47,7 @@ import org.veary.persist.exceptions.NonUniqueResultException;
 import org.veary.persist.exceptions.PersistenceException;
 
 /**
- * Handles SQL statement which return read and return 0 or more results in a {@link ResultSet}.
+ * Concrete implementation of {@link Query}.
  *
  * @author Marc L. Veary
  * @since 1.0
@@ -69,7 +69,15 @@ public final class QueryImpl implements Query {
      *
      * @param ds {@link DataSource}
      * @param builder {@link SqlBuilder}
-     * @param entityInterface the interface of the Entity class
+     * @param entityInterface the interface of a class which is to be created (by Reflection) and
+     * returned as the result(s). This interface must define a <b>static method</b> with the
+     * signature:
+     *
+     * <pre>
+     * newInstance(Map&lt;String, Object&gt;)
+     * </pre>
+     *
+     * <p>Which should validate the input {@code Map} and populate the instance's member fields.
      */
     public QueryImpl(DataSource ds, SqlBuilder builder, Class<?> entityInterface) {
         this.ds = Objects.requireNonNull(ds,
@@ -140,7 +148,12 @@ public final class QueryImpl implements Query {
                 Messages.getString("QueryImpl.error_msg_method_sequence")); //$NON-NLS-1$
         }
 
-        return Collections.emptyList();
+        final List<Object> list = new ArrayList<>(this.internalResult.size());
+        for (Map<String, Object> dataMap : this.internalResult) {
+            list.add(getNewInstance(getStaticFactoryMethod(), dataMap));
+        }
+
+        return Collections.unmodifiableList(list);
     }
 
     /**
@@ -172,6 +185,13 @@ public final class QueryImpl implements Query {
         return list;
     }
 
+    /**
+     * Ensures that the Constructor declared {@code Class<?> entityInterface} parameter has a
+     * declared <b>static method</n> named <b>newInstance</b> and takes a single parameter of type
+     * {@code Map}.
+     *
+     * @return {@link Method}
+     */
     private Method getStaticFactoryMethod() {
         try {
             return this.entityInterface.getDeclaredMethod(ENTITY_FACTORY_METHOD, Map.class);
@@ -180,6 +200,13 @@ public final class QueryImpl implements Query {
         }
     }
 
+    /**
+     * Invokes the method returned by {@link #getStaticFactoryMethod()}.
+     *
+     * @param staticFactory {@link Method}
+     * @param result {@code Map} result from the query
+     * @return {@link Object}
+     */
     private Object getNewInstance(Method staticFactory, Map<String, Object> result) {
         try {
             return staticFactory.invoke(this.entityInterface, result);

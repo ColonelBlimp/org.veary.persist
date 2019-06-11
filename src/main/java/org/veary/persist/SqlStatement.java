@@ -54,7 +54,8 @@ public interface SqlStatement {
     String getStatement();
 
     /**
-     * Returns a {@code Map<Integer, Object>} for the
+     * Returns the set parameters as a {@code Map<Integer, Object>}. The key indicates the index
+     * position and the value the Object to be set.
      *
      * @return {@code Map<Integer, Object>}
      */

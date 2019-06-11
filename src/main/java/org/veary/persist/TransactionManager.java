@@ -42,7 +42,7 @@ import java.util.List;
  * manager.commit();
  * </pre>
  *
- * The following two methods will return the results for a call to {@code commit()}:
+ * <p>The following two methods will return the results for a call to {@code commit()}:
  *
  * <pre>
  * int rowCount = manager.getRowCount();
@@ -74,7 +74,7 @@ public interface TransactionManager {
     void persist(SqlStatement statement);
 
     /**
-     * Commits all the persisted
+     * Commits all the persisted sql statements.
      */
     void commit();
 

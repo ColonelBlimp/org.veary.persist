@@ -26,6 +26,12 @@ package org.veary.persist;
 
 import java.util.List;
 
+/**
+ * Handles SQL statement which return 0 or more results..
+ *
+ * @author Marc L. Veary
+ * @since 1.0
+ */
 public interface Query {
 
     /**
@@ -37,9 +43,28 @@ public interface Query {
      */
     Query setParameter(int index, Object value);
 
+    /**
+     * Execute this SELECT query.
+     *
+     * @return the current {@code Query} object
+     */
     Query execute();
 
+    /**
+     * Returns an expected single result from the {@link #execute()}ing the SELECT query that
+     * returns a single result.
+     *
+     * <p><b>Note:</b> the actual type of {@code Object} returned is an implementation of
+     * interface passed to the constructor implementing this interface.
+     *
+     * @return {@link Object}
+     */
     Object getSingleResult();
 
+    /**
+     * Returns the query's results as a List.
+     *
+     * @return unmodifiable {@link List}. Cannot be {@code null}
+     */
     List<Object> getResultList();
 }

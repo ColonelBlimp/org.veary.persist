@@ -24,10 +24,10 @@
 
 package org.veary.persist.internal;
 
+import com.google.inject.AbstractModule;
+
 import org.veary.persist.QueryManager;
 import org.veary.persist.TransactionManager;
-
-import com.google.inject.AbstractModule;
 
 public final class GuicePersistModule extends AbstractModule {
 

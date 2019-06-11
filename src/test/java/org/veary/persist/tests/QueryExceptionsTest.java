@@ -30,7 +30,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import org.veary.persist.Entity;
 import org.veary.persist.Query;
 import org.veary.persist.QueryManager;
 import org.veary.persist.SqlBuilder;
@@ -99,7 +98,7 @@ public class QueryExceptionsTest {
         final QueryManager manager = this.injector.getInstance(QueryManager.class);
         Assert.assertNotNull(manager);
         final Query query = manager.createQuery(SqlBuilder.newInstance("SELECT * FROM ?"),
-            Entity.class);
+            String.class);
         Assert.assertNotNull(query);
         query.setParameter(0, "VALUE");
     }
@@ -111,7 +110,7 @@ public class QueryExceptionsTest {
         final QueryManager manager = this.injector.getInstance(QueryManager.class);
         Assert.assertNotNull(manager);
         final Query query = manager.createQuery(SqlBuilder.newInstance("SELECT * FROM ?"),
-            Entity.class);
+            String.class);
         Assert.assertNotNull(query);
         query.setParameter(1, null);
     }
@@ -123,7 +122,7 @@ public class QueryExceptionsTest {
         final QueryManager manager = this.injector.getInstance(QueryManager.class);
         Assert.assertNotNull(manager);
         final Query query = manager.createQuery(SqlBuilder.newInstance("INSERT INTO"),
-            Entity.class);
+            String.class);
         Assert.assertNotNull(query);
         query.execute();
     }
@@ -145,7 +144,7 @@ public class QueryExceptionsTest {
         Assert.assertNotNull(manager);
         final Query query = manager.createQuery(
             SqlBuilder.newInstance("SELECT * FROM debs.account WHERE id=?"),
-            Entity.class);
+            String.class);
         Assert.assertNotNull(query);
         query.setParameter(1, Integer.valueOf(10)).execute();
     }
@@ -158,7 +157,7 @@ public class QueryExceptionsTest {
         Assert.assertNotNull(manager);
         final Query query = manager.createQuery(
             SqlBuilder.newInstance("SELECT * FROM debs.account WHERE id=?"),
-            Entity.class);
+            String.class);
         Assert.assertNotNull(query);
         query.setParameter(1, Integer.valueOf(10)).getSingleResult();
     }

@@ -121,11 +121,12 @@ public final class TransactionManagerImpl implements TransactionManager {
     }
 
     /**
-     * Creates a {@link PreparedStatement}, calls the {@link PreparedStatement#executeUpdate() and
-     * then process the generated keys (if there are any).
+     * Creates a {@link PreparedStatement}, calls the {@link PreparedStatement#executeUpdate()}
+     * and then process the generated keys (if there are any).
      *
      * @param conn {@link Connection}
      * @throws SQLException if a database access error occurs
+     * @see #setGeneratedKeys(PreparedStatement)
      */
     private void createStatementAndExecute(Connection conn) throws SQLException {
         for (SqlStatement statement : this.statements) {

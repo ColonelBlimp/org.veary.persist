@@ -30,7 +30,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import org.veary.persist.Entity;
 import org.veary.persist.QueryManager;
 import org.veary.persist.SqlBuilder;
 import org.veary.persist.internal.GuicePersistModule;
@@ -68,7 +67,7 @@ public class QueryManagerTest {
         Assert.assertNotNull(manager);
 
         Assert.assertNotNull(
-            manager.createQuery(SqlBuilder.newInstance("SELECT * FROM ?"), Entity.class));
+            manager.createQuery(SqlBuilder.newInstance("SELECT * FROM ?"), String.class));
     }
 
     @Test(
