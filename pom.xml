@@ -204,6 +204,14 @@
 	<plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-scm-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
         <executions>
           <execution>
@@ -354,6 +362,8 @@
   </dependencies>
 
   <scm>
+    <connection>scm:git:https://github.com/ColonelBlimp/org.veary.persist.git</connection>
+    <url>https://github.com/ColonelBlimp/org.veary.persist</url>
   </scm>
 
 </project>
