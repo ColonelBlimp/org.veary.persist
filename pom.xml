@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.veary</groupId>
   <artifactId>persist</artifactId>
-  <version>0.9.0</version>
+  <version>0.9.0-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>Persist</name>
   <description>JDBC/SQL Persistence Library</description>
@@ -364,10 +364,9 @@
   </dependencies>
 
   <scm>
-    <connection>scm:git:git@github.com/ColonelBlimp/org.veary.persist.git</connection>
-    <developerConnection>scm:git:git@github.com/ColonelBlimp/org.veary.persist.git</developerConnection>
-    <url>scm:git:git@github.com/ColonelBlimp/org.veary.persist.git</url>
-    <tag>persist-0.9.0</tag>
+    <connection>scm:git:git@github.com:ColonelBlimp/org.veary.persist.git</connection>
+    <developerConnection>scm:git:git@github.com:ColonelBlimp/org.veary.persist.git</developerConnection>
+    <url>scm:git:git@github.com:ColonelBlimp/org.veary.persist.git</url>
   </scm>
 
 </project>
