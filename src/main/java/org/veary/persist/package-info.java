@@ -23,6 +23,64 @@
  */
 
 /**
+ * <h2>Requirements:</h2>
+ *
+ * <ul><li>Google Guice</li></ul>
+ *
+ * <p>Entity interfaces which have a <b>static factory method</b> with the signature:
+ * {@code static [interface] newInstance(Map<String, Object)} which creates an instance of the
+ * class.
+ *
+ * <p>For example:
+ *
+ * <pre>
+ *
+ * public interface Person {
+ *
+ *     Long getId();
+ *
+ *     String getSurname();
+ *
+ *     String getForename();
+ *
+ *     static Person newInstance(Map<String, Object> dataMap) {
+ *         // do all validation of the Map here
+ *         return new Person() {
+ *             Long getId() {
+ *                 return (Long) dataMap.get("ID"); // Key is the name of the database field
+ *             }
+ *
+ *             String getSurname() {
+ *                 return (String) dataMap.get("SURNAME");
+ *             }
+ *
+ *             String getForename() {
+ *             return (String) dataMap.get("FORNAME");
+ *         }
+ *     }
+ * }
+ *
+ * </pre>
+ *
+ * <pre>
+ *
+ * <h2>Usage:</h2>
+ *
+ * <pre>
+ *
+ * Injector injector = Guice.createInjector(
+ *     ServiceLoader.load(com.google.inject.AbstractModule));
+ *
+ * QueryManager manager = QueryManager = injector.getInstance(QueryManager.class);
+ *
+ * Query query = manager.createQuery(
+ *     SqlBuilder.newInstance("SELECT * FROM person WHERE id=?"),
+ *     Person.class);
+ * Person person = (Person) query
+ *     .setParameter(1, Long.valueOf(10))
+ *     .execute()
+ *     .getSingleResult();
+ * </pre>
  *
  */
 package org.veary.persist;
