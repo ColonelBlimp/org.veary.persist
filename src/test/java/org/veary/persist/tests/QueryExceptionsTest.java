@@ -35,12 +35,10 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.veary.persist.Query;
 import org.veary.persist.QueryManager;
-import org.veary.persist.SqlBuilder;
 import org.veary.persist.SqlStatement;
 import org.veary.persist.TransactionManager;
 import org.veary.persist.exceptions.NoResultException;
 import org.veary.persist.exceptions.PersistenceException;
-import org.veary.persist.internal.GuicePersistModule;
 import org.veary.persist.internal.QueryImpl;
 
 import hthurow.tomcatjndi.TomcatJNDI;
@@ -56,9 +54,7 @@ public class QueryExceptionsTest {
         this.tomcatJndi = new TomcatJNDI();
         this.tomcatJndi.processContextXml(contextXml);
         this.tomcatJndi.start();
-        this.injector = Guice.createInjector(
-            new GuicePersistTestModule(),
-            new GuicePersistModule());
+        this.injector = Guice.createInjector(new GuicePersistTestModule());
     }
 
     @AfterClass
@@ -72,12 +68,12 @@ public class QueryExceptionsTest {
     public void constructorNullInterfaceException() {
         final QueryManager manager = this.injector.getInstance(QueryManager.class);
         Assert.assertNotNull(manager);
-        manager.createQuery(SqlBuilder.newInstance("SELECT * FROM ?"), null);
+        manager.createQuery(SqlStatement.newInstance("SELECT * FROM ?"), null);
     }
 
     @Test(
         expectedExceptions = NullPointerException.class,
-        expectedExceptionsMessageRegExp = "SqlBuilder parameter is null.")
+        expectedExceptionsMessageRegExp = "SqlStatement parameter is null.")
     public void constructorNullQueryBuilderException() {
         final QueryManager manager = this.injector.getInstance(QueryManager.class);
         Assert.assertNotNull(manager);
@@ -97,10 +93,12 @@ public class QueryExceptionsTest {
     public void constructorSetParameterInvalidIndexException() {
         final QueryManager manager = this.injector.getInstance(QueryManager.class);
         Assert.assertNotNull(manager);
-        final Query query = manager.createQuery(SqlBuilder.newInstance("SELECT * FROM ?"),
-            String.class);
+
+        SqlStatement statement = SqlStatement.newInstance("SELECT * FROM ?");
+        statement.setParameter(0, "VALUE");
+
+        final Query query = manager.createQuery(statement, String.class);
         Assert.assertNotNull(query);
-        query.setParameter(0, "VALUE");
     }
 
     @Test(
@@ -109,10 +107,12 @@ public class QueryExceptionsTest {
     public void constructorSetParameterNullValueException() {
         final QueryManager manager = this.injector.getInstance(QueryManager.class);
         Assert.assertNotNull(manager);
-        final Query query = manager.createQuery(SqlBuilder.newInstance("SELECT * FROM ?"),
-            String.class);
+
+        SqlStatement statement = SqlStatement.newInstance("SELECT * FROM ?");
+        statement.setParameter(1, null);
+
+        final Query query = manager.createQuery(statement, String.class);
         Assert.assertNotNull(query);
-        query.setParameter(1, null);
     }
 
     @Test(
@@ -121,8 +121,9 @@ public class QueryExceptionsTest {
     public void constructorExecuteTypeException() {
         final QueryManager manager = this.injector.getInstance(QueryManager.class);
         Assert.assertNotNull(manager);
-        final Query query = manager.createQuery(SqlBuilder.newInstance("INSERT INTO"),
-            String.class);
+
+        SqlStatement statement = SqlStatement.newInstance("INSERT INTO");
+        final Query query = manager.createQuery(statement, String.class);
         Assert.assertNotNull(query);
         query.execute();
     }
@@ -133,20 +134,24 @@ public class QueryExceptionsTest {
     public void constructorNoResultsException() {
         final TransactionManager txManager = this.injector.getInstance(TransactionManager.class);
         Assert.assertNotNull(txManager);
-        txManager.begin();
-        SqlBuilder createTableBuilder = SqlBuilder.newInstance(
+
+        SqlStatement createTable = SqlStatement.newInstance(
             "CREATE TABLE IF NOT EXISTS debs.account(id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255))");
-        SqlStatement createTable = SqlStatement.newInstance(createTableBuilder);
+
+        txManager.begin();
         txManager.persist(createTable);
         txManager.commit();
 
         final QueryManager manager = this.injector.getInstance(QueryManager.class);
         Assert.assertNotNull(manager);
-        final Query query = manager.createQuery(
-            SqlBuilder.newInstance("SELECT * FROM debs.account WHERE id=?"),
-            String.class);
+
+        SqlStatement statement = SqlStatement
+            .newInstance("SELECT * FROM debs.account WHERE id=?");
+        statement.setParameter(1, Integer.valueOf(10));
+
+        final Query query = manager.createQuery(statement, String.class);
         Assert.assertNotNull(query);
-        query.setParameter(1, Integer.valueOf(10)).execute();
+        query.execute();
     }
 
     @Test(
@@ -155,11 +160,14 @@ public class QueryExceptionsTest {
     public void singleResultSequenceException() {
         final QueryManager manager = this.injector.getInstance(QueryManager.class);
         Assert.assertNotNull(manager);
-        final Query query = manager.createQuery(
-            SqlBuilder.newInstance("SELECT * FROM debs.account WHERE id=?"),
-            String.class);
+
+        SqlStatement statement = SqlStatement
+            .newInstance("SELECT * FROM debs.account WHERE id=?");
+        statement.setParameter(1, Integer.valueOf(10));
+
+        final Query query = manager.createQuery(statement, String.class);
         Assert.assertNotNull(query);
-        query.setParameter(1, Integer.valueOf(10)).getSingleResult();
+        query.getSingleResult();
     }
 
     @Test(
@@ -168,9 +176,9 @@ public class QueryExceptionsTest {
     public void listResultSequenceException() {
         final QueryManager manager = this.injector.getInstance(QueryManager.class);
         Assert.assertNotNull(manager);
-        final Query query = manager.createQuery(
-            SqlBuilder.newInstance("SELECT * FROM debs.account"),
-            String.class);
+        SqlStatement statement = SqlStatement.newInstance("SELECT * FROM debs.account");
+
+        final Query query = manager.createQuery(statement, String.class);
         Assert.assertNotNull(query);
         query.getResultList();
     }

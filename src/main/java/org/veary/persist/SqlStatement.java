@@ -27,6 +27,7 @@ package org.veary.persist;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Represents a parameterized SQL statement used to populate a {@code PreparedStatement} object
@@ -47,13 +48,6 @@ public interface SqlStatement {
     SqlStatement setParameter(int index, Object value);
 
     /**
-     * Returns an SQL statement that may contain one or more '?' IN parameter placeholders.
-     *
-     * @return {@code String}
-     */
-    String getStatement();
-
-    /**
      * Returns the set parameters as a {@code Map<Integer, Object>}. The key indicates the index
      * position and the value the Object to be set.
      *
@@ -64,26 +58,36 @@ public interface SqlStatement {
     /**
      * Static factory method for creating instances of this interface.
      *
-     * @param builder {@link SqlBuilder} object
+     * @param statement DML/DDL statement with zero or more IN parameters
      * @return a new {@code SqlStatement} object
      */
-    static SqlStatement newInstance(SqlBuilder builder) {
-        final String stmt = builder.toString();
+    static SqlStatement newInstance(String statement) {
 
         return new SqlStatement() {
 
-            private String statement = stmt;
+            private String stmt = Objects.requireNonNull(statement,
+                "String parameter cannot be null.");
             private Map<Integer, Object> params = new HashMap<>();
 
             @Override
             public SqlStatement setParameter(int index, Object value) {
-                this.params.put(Integer.valueOf(index), value);
+                if (index < 1) {
+                    throw new IllegalArgumentException("Parameter index starts a 1.");
+                }
+                this.params.put(Integer.valueOf(index),
+                    Objects.requireNonNull(value, "Object parameter is null."));
                 return this;
             }
 
+            /**
+             * Returns an SQL statement that may contain zero or more '?' IN parameter
+             * placeholders.
+             *
+             * @return {@code String}
+             */
             @Override
-            public String getStatement() {
-                return this.statement;
+            public String toString() {
+                return this.stmt;
             }
 
             @Override

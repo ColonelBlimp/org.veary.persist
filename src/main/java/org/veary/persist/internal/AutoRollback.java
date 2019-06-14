@@ -48,7 +48,7 @@ public final class AutoRollback implements AutoCloseable {
      *
      * @param conn {@code Connection}
      */
-    protected AutoRollback(Connection conn) {
+    public AutoRollback(Connection conn) {
         this.conn = conn;
     }
 

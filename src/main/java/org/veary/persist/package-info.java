@@ -23,9 +23,10 @@
  */
 
 /**
- * <h2>Requirements:</h2>
+ * <h1>Introduction:</h1>
  *
- * <ul><li>Google Guice</li></ul>
+ * <p>This library is a very basic wrapper around JDBC particularly providing an easier use of
+ * transactions and automatic rollback functionality.
  *
  * <p>Entity interfaces which have a <b>static factory method</b> with the signature:
  * {@code static [interface] newInstance(Map<String, Object)} which creates an instance of the

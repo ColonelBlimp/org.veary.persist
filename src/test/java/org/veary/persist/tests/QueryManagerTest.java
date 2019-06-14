@@ -24,6 +24,9 @@
 
 package org.veary.persist.tests;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
 import java.io.File;
 
 import org.testng.Assert;
@@ -31,12 +34,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.veary.persist.QueryManager;
-import org.veary.persist.SqlBuilder;
-import org.veary.persist.internal.GuicePersistModule;
-import org.veary.persist.internal.QueryManagerImpl;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
+import org.veary.persist.SqlStatement;
 
 import hthurow.tomcatjndi.TomcatJNDI;
 
@@ -52,8 +50,7 @@ public class QueryManagerTest {
         this.tomcatJndi.processContextXml(contextXml);
         this.tomcatJndi.start();
         this.injector = Guice.createInjector(
-            new GuicePersistTestModule(),
-            new GuicePersistModule());
+            new GuicePersistTestModule());
     }
 
     @AfterClass
@@ -67,19 +64,19 @@ public class QueryManagerTest {
         Assert.assertNotNull(manager);
 
         Assert.assertNotNull(
-            manager.createQuery(SqlBuilder.newInstance("SELECT * FROM ?"), String.class));
+            manager.createQuery(SqlStatement.newInstance("SELECT * FROM ?"), String.class));
     }
 
     @Test(
         expectedExceptions = NullPointerException.class,
         expectedExceptionsMessageRegExp = "DataSource parameter is null.")
     public void queryManagerNullDataSourceException() {
-        new QueryManagerImpl(null);
+        new QueryManager(null);
     }
 
     @Test(
         expectedExceptions = NullPointerException.class,
-        expectedExceptionsMessageRegExp = "SqlBuilder parameter is null.")
+        expectedExceptionsMessageRegExp = "SqlStatement parameter is null.")
     public void queryManagerNullBuilder() {
         final QueryManager manager = this.injector.getInstance(QueryManager.class);
         Assert.assertNotNull(manager);
@@ -92,6 +89,6 @@ public class QueryManagerTest {
     public void queryManagerNullInterface() {
         final QueryManager manager = this.injector.getInstance(QueryManager.class);
         Assert.assertNotNull(manager);
-        manager.createQuery(SqlBuilder.newInstance("SELECT * FROM ?"), null);
+        manager.createQuery(SqlStatement.newInstance("SELECT * FROM ?"), null);
     }
 }

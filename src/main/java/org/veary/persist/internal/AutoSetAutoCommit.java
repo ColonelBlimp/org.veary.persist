@@ -45,7 +45,7 @@ public final class AutoSetAutoCommit implements AutoCloseable {
      * @param conn {@link Connection}
      * @throws SQLException if there is an error
      */
-    protected AutoSetAutoCommit(Connection conn) throws SQLException {
+    public AutoSetAutoCommit(Connection conn) throws SQLException {
         this.conn = conn;
         this.originalAutoCommit = conn.getAutoCommit();
         this.conn.setAutoCommit(false);
