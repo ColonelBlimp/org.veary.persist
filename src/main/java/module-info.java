@@ -6,7 +6,7 @@ module org.veary.persist {
     requires com.google.guice;
     requires com.google.guice.extensions.jndi;
     requires java.naming;
-    requires java.sql;
+    requires transitive java.sql;
     requires javax.inject;
     requires org.apache.logging.log4j;
 
