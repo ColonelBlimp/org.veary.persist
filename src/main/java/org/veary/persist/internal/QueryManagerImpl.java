@@ -22,42 +22,41 @@
  * SOFTWARE.
  */
 
-package org.veary.persist;
+package org.veary.persist.internal;
 
-import java.util.List;
+import java.util.Objects;
 
-public interface TransactionManager {
+import javax.sql.DataSource;
+
+import org.veary.persist.Query;
+import org.veary.persist.QueryManager;
+import org.veary.persist.SqlStatement;
+
+/**
+ * <h2>Purpose:</h2> handles read statements through JDBC.
+ *
+ * @author Marc L. Veary
+ * @since 1.0
+ */
+public final class QueryManagerImpl implements QueryManager {
+
+    private final DataSource ds;
 
     /**
-     * Mark the start of a transaction.
-     */
-    void begin();
-
-    /**
-     * Commits all the persisted sql statements.
-     */
-    void commit();
-
-    /**
-     * Persists the designated {@code SqlStatement} to the JDBC driver.
+     * Constructor.
      *
-     * @param statement {@link SqlStatement}
+     * @param ds {@link DataSource}
      */
-    void persist(SqlStatement statement);
+    public QueryManagerImpl(DataSource ds) {
+        this.ds = Objects.requireNonNull(ds,
+            Messages.getString("QueryManagerImpl.error_msg_ds_null"));
+    }
 
-    /**
-     * Returns a {@code List<Integer>} of the generated ids from the transaction. The id's are in
-     * the same order as calls to {@code persis(...)}.
-     *
-     * @return {@code List<Integer>}
-     */
-    List<Integer> getGeneratedIdList();
-
-    /**
-     * Returns the row count for SQL Data Manipulation Language (DML) statements, or 0 for SQL
-     * statements that return nothing.
-     *
-     * @return int
-     */
-    int getRowCount();
+    @Override
+    public Query createQuery(SqlStatement statement, Class<?> entityInterface) {
+        return new QueryImpl(this.ds, Objects.requireNonNull(statement,
+            Messages.getString("QueryManagerImpl.error_msg_statement_null")),
+            Objects.requireNonNull(entityInterface,
+                Messages.getString("QueryManagerImpl.error_msg_iface_null")));
+    }
 }

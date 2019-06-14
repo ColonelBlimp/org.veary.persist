@@ -24,40 +24,32 @@
 
 package org.veary.persist;
 
-import java.util.List;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.sql.DataSource;
 
-public interface TransactionManager {
+import org.veary.persist.internal.QueryManagerImpl;
+import org.veary.persist.internal.TransactionManagerImpl;
 
-    /**
-     * Mark the start of a transaction.
-     */
-    void begin();
+@Singleton
+public final class PersistenceManagerFactory {
 
-    /**
-     * Commits all the persisted sql statements.
-     */
-    void commit();
+    private final DataSource ds;
 
-    /**
-     * Persists the designated {@code SqlStatement} to the JDBC driver.
-     *
-     * @param statement {@link SqlStatement}
-     */
-    void persist(SqlStatement statement);
+    @Inject
+    public PersistenceManagerFactory(DataSource ds) {
+        this.ds = ds;
+    }
 
-    /**
-     * Returns a {@code List<Integer>} of the generated ids from the transaction. The id's are in
-     * the same order as calls to {@code persis(...)}.
-     *
-     * @return {@code List<Integer>}
-     */
-    List<Integer> getGeneratedIdList();
+    public QueryManager createQueryManager() {
+        return new QueryManagerImpl(this.ds);
+    }
 
-    /**
-     * Returns the row count for SQL Data Manipulation Language (DML) statements, or 0 for SQL
-     * statements that return nothing.
-     *
-     * @return int
-     */
-    int getRowCount();
+    public TransactionManager createTransactionManager() {
+        return new TransactionManagerImpl(this.ds);
+    }
+
+    public CallableManager createCallableManager() {
+        throw new UnsupportedOperationException();
+    }
 }

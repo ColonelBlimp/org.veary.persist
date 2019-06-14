@@ -62,11 +62,13 @@ public interface SqlStatement {
      * @return a new {@code SqlStatement} object
      */
     static SqlStatement newInstance(String statement) {
+        Objects.requireNonNull(statement, "String parameter cannot be null.");
+        if ("".equals(statement)) {
+            throw new IllegalArgumentException("String parameter must be non-empty.");
+        }
 
         return new SqlStatement() {
 
-            private String stmt = Objects.requireNonNull(statement,
-                "String parameter cannot be null.");
             private Map<Integer, Object> params = new HashMap<>();
 
             @Override
@@ -87,7 +89,7 @@ public interface SqlStatement {
              */
             @Override
             public String toString() {
-                return this.stmt;
+                return statement;
             }
 
             @Override

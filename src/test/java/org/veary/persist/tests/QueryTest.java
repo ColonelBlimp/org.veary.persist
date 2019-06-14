@@ -35,6 +35,7 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import org.veary.persist.PersistenceManagerFactory;
 import org.veary.persist.Query;
 import org.veary.persist.QueryManager;
 import org.veary.persist.SqlStatement;
@@ -64,7 +65,10 @@ public class QueryTest {
 
     @Test
     public void createTables() {
-        final TransactionManager txManager = this.injector.getInstance(TransactionManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+
+        final TransactionManager txManager = factory.createTransactionManager();
         Assert.assertNotNull(txManager);
         txManager.begin();
         SqlStatement createTable = SqlStatement.newInstance(
@@ -88,7 +92,9 @@ public class QueryTest {
 
     @Test
     public void singleResult() {
-        final QueryManager manager = this.injector.getInstance(QueryManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final QueryManager manager = factory.createQueryManager();
         Assert.assertNotNull(manager);
 
         SqlStatement statement = SqlStatement
@@ -105,7 +111,9 @@ public class QueryTest {
 
     @Test
     public void resultsList() {
-        final QueryManager manager = this.injector.getInstance(QueryManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final QueryManager manager = factory.createQueryManager();
         Assert.assertNotNull(manager);
 
         SqlStatement statement = SqlStatement.newInstance("SELECT * FROM debs.account");

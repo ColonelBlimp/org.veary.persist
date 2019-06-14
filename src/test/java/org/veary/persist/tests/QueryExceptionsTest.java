@@ -33,6 +33,7 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import org.veary.persist.PersistenceManagerFactory;
 import org.veary.persist.Query;
 import org.veary.persist.QueryManager;
 import org.veary.persist.SqlStatement;
@@ -66,7 +67,9 @@ public class QueryExceptionsTest {
         expectedExceptions = NullPointerException.class,
         expectedExceptionsMessageRegExp = "Class interface parameter is null.")
     public void constructorNullInterfaceException() {
-        final QueryManager manager = this.injector.getInstance(QueryManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final QueryManager manager = factory.createQueryManager();
         Assert.assertNotNull(manager);
         manager.createQuery(SqlStatement.newInstance("SELECT * FROM ?"), null);
     }
@@ -75,7 +78,9 @@ public class QueryExceptionsTest {
         expectedExceptions = NullPointerException.class,
         expectedExceptionsMessageRegExp = "SqlStatement parameter is null.")
     public void constructorNullQueryBuilderException() {
-        final QueryManager manager = this.injector.getInstance(QueryManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final QueryManager manager = factory.createQueryManager();
         Assert.assertNotNull(manager);
         manager.createQuery(null, null);
     }
@@ -91,7 +96,9 @@ public class QueryExceptionsTest {
         expectedExceptions = IllegalArgumentException.class,
         expectedExceptionsMessageRegExp = "Parameter index starts a 1.")
     public void constructorSetParameterInvalidIndexException() {
-        final QueryManager manager = this.injector.getInstance(QueryManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final QueryManager manager = factory.createQueryManager();
         Assert.assertNotNull(manager);
 
         SqlStatement statement = SqlStatement.newInstance("SELECT * FROM ?");
@@ -105,7 +112,9 @@ public class QueryExceptionsTest {
         expectedExceptions = NullPointerException.class,
         expectedExceptionsMessageRegExp = "Object parameter is null.")
     public void constructorSetParameterNullValueException() {
-        final QueryManager manager = this.injector.getInstance(QueryManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final QueryManager manager = factory.createQueryManager();
         Assert.assertNotNull(manager);
 
         SqlStatement statement = SqlStatement.newInstance("SELECT * FROM ?");
@@ -119,7 +128,9 @@ public class QueryExceptionsTest {
         expectedExceptions = IllegalStateException.class,
         expectedExceptionsMessageRegExp = "Incorrect query type.")
     public void constructorExecuteTypeException() {
-        final QueryManager manager = this.injector.getInstance(QueryManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final QueryManager manager = factory.createQueryManager();
         Assert.assertNotNull(manager);
 
         SqlStatement statement = SqlStatement.newInstance("INSERT INTO");
@@ -132,7 +143,9 @@ public class QueryExceptionsTest {
         expectedExceptions = NoResultException.class,
         expectedExceptionsMessageRegExp = "Query did not return any results.")
     public void constructorNoResultsException() {
-        final TransactionManager txManager = this.injector.getInstance(TransactionManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final TransactionManager txManager = factory.createTransactionManager();
         Assert.assertNotNull(txManager);
 
         SqlStatement createTable = SqlStatement.newInstance(
@@ -142,7 +155,7 @@ public class QueryExceptionsTest {
         txManager.persist(createTable);
         txManager.commit();
 
-        final QueryManager manager = this.injector.getInstance(QueryManager.class);
+        final QueryManager manager = factory.createQueryManager();
         Assert.assertNotNull(manager);
 
         SqlStatement statement = SqlStatement
@@ -158,7 +171,9 @@ public class QueryExceptionsTest {
         expectedExceptions = PersistenceException.class,
         expectedExceptionsMessageRegExp = "Invalid method call sequence.")
     public void singleResultSequenceException() {
-        final QueryManager manager = this.injector.getInstance(QueryManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final QueryManager manager = factory.createQueryManager();
         Assert.assertNotNull(manager);
 
         SqlStatement statement = SqlStatement
@@ -174,7 +189,9 @@ public class QueryExceptionsTest {
         expectedExceptions = PersistenceException.class,
         expectedExceptionsMessageRegExp = "Invalid method call sequence.")
     public void listResultSequenceException() {
-        final QueryManager manager = this.injector.getInstance(QueryManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final QueryManager manager = factory.createQueryManager();
         Assert.assertNotNull(manager);
         SqlStatement statement = SqlStatement.newInstance("SELECT * FROM debs.account");
 

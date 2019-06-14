@@ -22,42 +22,24 @@
  * SOFTWARE.
  */
 
-package org.veary.persist;
+package org.veary.persist.tests;
 
-import java.util.List;
+import org.testng.annotations.Test;
+import org.veary.persist.SqlStatement;
 
-public interface TransactionManager {
+public class SqlStatementTest {
 
-    /**
-     * Mark the start of a transaction.
-     */
-    void begin();
+    @Test(
+        expectedExceptions = NullPointerException.class,
+        expectedExceptionsMessageRegExp = "String parameter cannot be null.")
+    public void nullParameterException() {
+        SqlStatement.newInstance(null);
+    }
 
-    /**
-     * Commits all the persisted sql statements.
-     */
-    void commit();
-
-    /**
-     * Persists the designated {@code SqlStatement} to the JDBC driver.
-     *
-     * @param statement {@link SqlStatement}
-     */
-    void persist(SqlStatement statement);
-
-    /**
-     * Returns a {@code List<Integer>} of the generated ids from the transaction. The id's are in
-     * the same order as calls to {@code persis(...)}.
-     *
-     * @return {@code List<Integer>}
-     */
-    List<Integer> getGeneratedIdList();
-
-    /**
-     * Returns the row count for SQL Data Manipulation Language (DML) statements, or 0 for SQL
-     * statements that return nothing.
-     *
-     * @return int
-     */
-    int getRowCount();
+    @Test(
+        expectedExceptions = IllegalArgumentException.class,
+        expectedExceptionsMessageRegExp = "String parameter must be non-empty.")
+    public void emptyParameterException() {
+        SqlStatement.newInstance("");
+    }
 }

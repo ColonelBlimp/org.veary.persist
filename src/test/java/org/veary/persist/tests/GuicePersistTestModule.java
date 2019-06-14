@@ -31,8 +31,7 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.sql.DataSource;
 
-import org.veary.persist.QueryManager;
-import org.veary.persist.TransactionManager;
+import org.veary.persist.PersistenceManagerFactory;
 
 public class GuicePersistTestModule extends AbstractModule {
 
@@ -41,7 +40,6 @@ public class GuicePersistTestModule extends AbstractModule {
         bind(Context.class).to(InitialContext.class);
         bind(DataSource.class).toProvider(
             JndiIntegration.fromJndi(DataSource.class, "java:/comp/env/jdbc/debs"));
-        bind(QueryManager.class);
-        bind(TransactionManager.class);
+        bind(PersistenceManagerFactory.class);
     }
 }
