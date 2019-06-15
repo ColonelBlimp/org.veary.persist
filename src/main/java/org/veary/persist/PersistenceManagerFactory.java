@@ -31,24 +31,55 @@ import javax.sql.DataSource;
 import org.veary.persist.internal.QueryManagerImpl;
 import org.veary.persist.internal.TransactionManagerImpl;
 
+/**
+ * <b>Purpose:</b> factory for all the manager classes.
+ *
+ * <p><b>Notes:</b> annotated for JSR 330
+ *
+ * @author Marc L. Veary
+ * @since 1.0
+ * @see QueryManager
+ * @see TransactionManager
+ * @see CallableManager
+ */
 @Singleton
 public final class PersistenceManagerFactory {
 
     private final DataSource ds;
 
+    /**
+     * Constructor.
+     *
+     * @param ds {@code DataSource}
+     */
     @Inject
     public PersistenceManagerFactory(DataSource ds) {
         this.ds = ds;
     }
 
+    /**
+     * Returns a new instance of the {@link QueryManager}.
+     *
+     * @return new instance
+     */
     public QueryManager createQueryManager() {
         return new QueryManagerImpl(this.ds);
     }
 
+    /**
+     * Returns a new instance of the {@link TransactionManager}.
+     *
+     * @return new instance
+     */
     public TransactionManager createTransactionManager() {
         return new TransactionManagerImpl(this.ds);
     }
 
+    /**
+     * Returns a new instance of the {@link CallableManager}.
+     *
+     * @return new instance
+     */
     public CallableManager createCallableManager() {
         throw new UnsupportedOperationException();
     }
