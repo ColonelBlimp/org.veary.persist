@@ -73,21 +73,19 @@ public class QueryTest {
         txManager.begin();
         SqlStatement createTable = SqlStatement.newInstance(
             "CREATE TABLE IF NOT EXISTS debs.account(id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255))");
-        txManager.persist(createTable);
+        Long idOne = txManager.persist(createTable);
 
         SqlStatement insertAccountOne = SqlStatement
             .newInstance("INSERT INTO debs.account(name) VALUES(?)");
         insertAccountOne.setParameter(1, "CASH");
-        txManager.persist(insertAccountOne);
+        this.id = txManager.persist(insertAccountOne);
 
         SqlStatement insertAccountTwo = SqlStatement
             .newInstance("INSERT INTO debs.account(name) VALUES(?)");
         insertAccountTwo.setParameter(1, "EXPENSE");
-        txManager.persist(insertAccountTwo);
+        Long idThree = txManager.persist(insertAccountTwo);
 
         txManager.commit();
-
-        this.id = Long.valueOf(txManager.getGeneratedIdList().get(0).intValue());
     }
 
     @Test

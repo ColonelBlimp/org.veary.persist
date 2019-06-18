@@ -69,7 +69,8 @@ public class TransactionManagerTest {
         SqlStatement createTable = SqlStatement.newInstance(
             "CREATE TABLE IF NOT EXISTS debs.account(id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255))");
         manager.begin();
-        manager.persist(createTable);
+        Long result = manager.persist(createTable);
+        Assert.assertEquals(result, Long.valueOf(0));
         manager.commit();
 
         manager.begin();
@@ -77,17 +78,18 @@ public class TransactionManagerTest {
         SqlStatement createAccountOne = SqlStatement
             .newInstance("INSERT INTO debs.account(name) VALUES(?)");
         createAccountOne.setParameter(1, "CASH");
-        manager.persist(createAccountOne);
+        result = manager.persist(createAccountOne);
+        Assert.assertTrue(result > 0);
 
         SqlStatement createAccountTwo = SqlStatement
             .newInstance("INSERT INTO debs.account(name) VALUES(?)");
         createAccountTwo.setParameter(1, "EXPENSE");
-        manager.persist(createAccountTwo);
+        result = manager.persist(createAccountTwo);
+        Assert.assertTrue(result > 0);
 
         manager.commit();
 
         Assert.assertTrue(manager.getRowCount() == 1);
-        Assert.assertTrue(manager.getGeneratedIdList().size() == 2);
     }
 
     @Test(

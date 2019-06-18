@@ -24,8 +24,6 @@
 
 package org.veary.persist;
 
-import java.util.List;
-
 public interface TransactionManager {
 
     /**
@@ -42,16 +40,9 @@ public interface TransactionManager {
      * Persists the designated {@code SqlStatement} to the JDBC driver.
      *
      * @param statement {@link SqlStatement}
+     * @return {@code Long} the value of the generated Id, otherwise 0
      */
-    void persist(SqlStatement statement);
-
-    /**
-     * Returns a {@code List<Integer>} of the generated ids from the transaction. The id's are in
-     * the same order as calls to {@code persis(...)}.
-     *
-     * @return {@code List<Integer>}
-     */
-    List<Integer> getGeneratedIdList();
+    Long persist(SqlStatement statement);
 
     /**
      * Returns the row count for SQL Data Manipulation Language (DML) statements, or 0 for SQL
