@@ -111,7 +111,7 @@ public final class QueryImpl implements Query {
 
             }
         } catch (final SQLException e) {
-            throw new PersistenceException(e);
+            throw new PersistenceException(e.getCause());
         }
 
         return this;
@@ -187,7 +187,9 @@ public final class QueryImpl implements Query {
         try {
             return this.entityInterface.getDeclaredMethod(ENTITY_FACTORY_METHOD, Map.class);
         } catch (NoSuchMethodException | SecurityException e) {
-            throw new PersistenceException(e);
+            throw new PersistenceException(
+                String.format("Error accessing %s.newInstance(): %s",
+                    this.entityInterface.getName(), e.getCause()));
         }
     }
 
@@ -203,7 +205,10 @@ public final class QueryImpl implements Query {
             return staticFactory.invoke(this.entityInterface, result);
         } catch (IllegalAccessException | IllegalArgumentException
             | InvocationTargetException e) {
-            throw new PersistenceException(e);
+            throw new PersistenceException(
+                String.format("Error invoking %s.newInstance(): %s",
+                    this.entityInterface.getName(),
+                    e.getCause()));
         }
     }
 }
