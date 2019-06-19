@@ -168,7 +168,7 @@ public final class QueryImpl implements Query {
         while (rset.next()) {
             final Map<String, Object> row = new HashMap<>();
             for (int i = 1; i <= columns; i++) {
-                row.put(md.getColumnName(i).toUpperCase(), rset.getObject(i));
+                row.put(md.getColumnLabel(i).toUpperCase(), rset.getObject(i));
             }
             list.add(row);
         }
