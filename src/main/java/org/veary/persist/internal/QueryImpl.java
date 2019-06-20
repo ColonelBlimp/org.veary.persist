@@ -111,6 +111,9 @@ public final class QueryImpl implements Query {
 
             }
         } catch (final SQLException e) {
+            if (e.getCause() == null) {
+                throw new PersistenceException(e);
+            }
             throw new PersistenceException(e.getCause());
         }
 
@@ -188,8 +191,9 @@ public final class QueryImpl implements Query {
             return this.entityInterface.getDeclaredMethod(ENTITY_FACTORY_METHOD, Map.class);
         } catch (NoSuchMethodException | SecurityException e) {
             throw new PersistenceException(
-                String.format("Error accessing %s.newInstance(): %s",
-                    this.entityInterface.getName(), e.getCause()));
+                String.format("Error accessing %s.newInstance(): %s - cause: %s",
+                    this.entityInterface.getName(),
+                    e, e.getCause()));
         }
     }
 
@@ -206,9 +210,9 @@ public final class QueryImpl implements Query {
         } catch (IllegalAccessException | IllegalArgumentException
             | InvocationTargetException e) {
             throw new PersistenceException(
-                String.format("Error invoking %s.newInstance(): %s",
+                String.format("Error invoking %s.newInstance(): %s - cause: %s",
                     this.entityInterface.getName(),
-                    e.getCause()));
+                    e, e.getCause()));
         }
     }
 }
