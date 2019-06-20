@@ -89,7 +89,10 @@ public final class TransactionManagerImpl implements TransactionManager {
         try {
             this.conn = this.ds.getConnection();
         } catch (SQLException e) {
-            throw new PersistenceException(e);
+            if (e.getCause() == null) {
+                throw new PersistenceException(e);
+            }
+            throw new PersistenceException(e.getCause());
         }
 
         this.rowCountResult = 0;
@@ -113,7 +116,10 @@ public final class TransactionManagerImpl implements TransactionManager {
             this.conn.close();
         } catch (final SQLException e) {
             rollback();
-            throw new PersistenceException(e);
+            if (e.getCause() == null) {
+                throw new PersistenceException(e);
+            }
+            throw new PersistenceException(e.getCause());
         } finally {
             this.conn = null;
         }
@@ -147,7 +153,10 @@ public final class TransactionManagerImpl implements TransactionManager {
             id = getGeneratedKey(pstmt);
         } catch (SQLException e) {
             rollback();
-            throw new PersistenceException(e);
+            if (e.getCause() == null) {
+                throw new PersistenceException(e);
+            }
+            throw new PersistenceException(e.getCause());
         }
 
         this.persistCalled = true;
