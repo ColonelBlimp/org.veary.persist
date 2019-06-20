@@ -24,12 +24,6 @@
 
 package org.veary.persist;
 
-/**
- * <h2>Purpose:</h2> handles read statements through JDBC.
- *
- * @author Marc L. Veary
- * @since 1.0
- */
 public interface QueryManager {
 
     /**
@@ -39,5 +33,5 @@ public interface QueryManager {
      * @param entityInterface the interface of the entity to be returned
      * @return an instance of a {@link Query} object
      */
-    Query createQuery(SqlBuilder builder, Class<?> entityInterface);
+    Query createQuery(SqlStatement statement, Class<?> entityInterface);
 }

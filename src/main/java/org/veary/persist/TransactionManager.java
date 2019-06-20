@@ -24,37 +24,8 @@
 
 package org.veary.persist;
 
-import java.util.List;
-
 /**
- * <h2>Purpose:</h2> handles transactions through JDBC.
- *
- * <h2>Usage:</h2>
- *
- * <pre>
- * SqlBuilder builder = SqlBuilder.newInstance("INSERT INTO schema.table(name) VALUES(?)");
- * SqlStatement statement = SqlStatement.newInstance(builder);
- * statement.setParameter(1, "CASH");
- *
- * TransactionManager manager = injector.getInstance(TransactionManager.class);
- * manager.begin();
- * manager.persist(statement)
- * manager.commit();
- * </pre>
- *
- * <p>The following two methods will return the results for a call to {@code commit()}:
- *
- * <pre>
- * int rowCount = manager.getRowCount();
- * List&lt;Integer&gt; ids = manager.getGeneratedIdList();
- * </pre>
- *
- * <p>However, the results of a call to {@code commit()} are reset upon a call to
- * {@code begin()}.
- *
- * <h2>Rollback:</h2>
- *
- * <p>The manager automatically handles rollback if there is an error.
+ * <b>Purpose:</b> defines the method for using JDBC transactions.
  *
  * @author Marc L. Veary
  * @since 1.0
@@ -67,24 +38,17 @@ public interface TransactionManager {
     void begin();
 
     /**
-     * Persists the designated {@code SqlStatement} to the JDBC driver.
-     *
-     * @param statement {@link SqlStatement}
-     */
-    void persist(SqlStatement statement);
-
-    /**
      * Commits all the persisted sql statements.
      */
     void commit();
 
     /**
-     * Returns a {@code List<Integer>} of the generated ids from the transaction. The id's are in
-     * the same order as calls to {@code persis(...)}.
+     * Persists the designated {@code SqlStatement} to the JDBC driver.
      *
-     * @return {@code List<Integer>}
+     * @param statement {@link SqlStatement}
+     * @return {@code Long} the value of the generated Id, otherwise 0
      */
-    List<Integer> getGeneratedIdList();
+    Long persist(SqlStatement statement);
 
     /**
      * Returns the row count for SQL Data Manipulation Language (DML) statements, or 0 for SQL

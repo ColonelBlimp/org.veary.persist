@@ -24,6 +24,7 @@
 
 package org.veary.persist.tests;
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.veary.persist.SqlBuilder;
 
@@ -41,5 +42,11 @@ public class SqlBuilderTest {
         expectedExceptionsMessageRegExp = "String parameter must be non-empty.")
     public void emptyParameterException() {
         SqlBuilder.newInstance("");
+    }
+
+    @Test
+    public void newBuilder() {
+        SqlBuilder builder = SqlBuilder.newInstance("TEST");
+        Assert.assertEquals(builder.toString(), "TEST");
     }
 }

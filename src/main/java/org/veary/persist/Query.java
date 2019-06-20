@@ -35,15 +35,6 @@ import java.util.List;
 public interface Query {
 
     /**
-     * Sets the value of the designated index using the given object.
-     *
-     * @param index the first parameter is 1, the second is 2, ...
-     * @param value the object containing the input parameter value
-     * @return the current {@code Query} object
-     */
-    Query setParameter(int index, Object value);
-
-    /**
      * Execute this SELECT query.
      *
      * @return the current {@code Query} object

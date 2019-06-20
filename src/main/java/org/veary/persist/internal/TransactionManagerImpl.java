@@ -28,34 +28,47 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 import javax.inject.Inject;
 import javax.sql.DataSource;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.veary.persist.SqlStatement;
 import org.veary.persist.TransactionManager;
 import org.veary.persist.exceptions.PersistenceException;
 
 /**
- * Concrete implementation of the {@link TransactionManager} interface.
+ * <h2>Purpose:</h2> handles transactions through JDBC.
+ *
+ * <h2>Usage:</h2>
+ *
+ * <pre>
+ * SqlBuilder builder = SqlBuilder.newInstance("INSERT INTO schema.table(name) VALUES(?)");
+ * SqlStatement statement = SqlStatement.newInstance(builder);
+ * statement.setParameter(1, "CASH");
+ *
+ * TransactionManager manager = injector.getInstance(TransactionManager.class);
+ * manager.begin();
+ * Long resultId = manager.persist(statement)
+ * manager.commit();
+ * </pre>
  *
  * @author Marc L. Veary
  * @since 1.0
  */
 public final class TransactionManagerImpl implements TransactionManager {
 
+    private static final Logger LOG = LogManager.getLogger(TransactionManagerImpl.class);
     private static final String SELECT_STR = "SELECT";
 
     private final DataSource ds;
     private boolean txActive;
-    private final List<SqlStatement> statements;
+    private boolean persistCalled;
     private int rowCountResult;
-    private List<Integer> generatedIds;
+    private Connection conn;
 
     /**
      * Constructor.
@@ -65,19 +78,23 @@ public final class TransactionManagerImpl implements TransactionManager {
     @Inject
     public TransactionManagerImpl(DataSource ds) {
         this.ds = ds;
-        this.statements = new ArrayList<>();
-        this.generatedIds = Collections.emptyList();
     }
 
     @Override
     public void begin() {
-        if (this.txActive) {
+        if (this.txActive || this.conn != null) {
             throw new IllegalStateException("Transaction already active.");
         }
 
-        this.generatedIds = new ArrayList<>();
+        try {
+            this.conn = this.ds.getConnection();
+        } catch (SQLException e) {
+            throw new PersistenceException(e);
+        }
+
         this.rowCountResult = 0;
         this.txActive = true;
+        this.persistCalled = false;
     }
 
     @Override
@@ -85,42 +102,56 @@ public final class TransactionManagerImpl implements TransactionManager {
         if (!this.txActive) {
             throw new IllegalStateException("No active transaction.");
         }
-        if (this.statements.isEmpty()) {
+
+        if (!this.persistCalled) {
             throw new IllegalStateException("Nothing to commit.");
         }
 
-        try (
-            Connection conn = this.ds.getConnection();
-            AutoSetAutoCommit auto = new AutoSetAutoCommit(conn);
-            AutoRollback tx = new AutoRollback(conn)) {
-
-            createStatementAndExecute(conn);
-
-            tx.commit();
-
+        try {
+            this.conn.commit();
+            this.conn.setAutoCommit(true);
+            this.conn.close();
         } catch (final SQLException e) {
+            rollback();
             throw new PersistenceException(e);
+        } finally {
+            this.conn = null;
         }
 
         this.txActive = false;
     }
 
     @Override
-    public void persist(SqlStatement statement) {
+    public Long persist(SqlStatement statement) {
         if (!this.txActive) {
             throw new IllegalStateException("No active transaction.");
         }
+
         Objects.requireNonNull(statement, "Statement cannot be null.");
-        if (statement.getStatement().toUpperCase().startsWith(SELECT_STR)) {
+        if (statement.toString().toUpperCase().startsWith(SELECT_STR)) {
             throw new IllegalStateException(
                 Messages.getString("QueryImpl.error_msg_incorrect_query_type")); //$NON-NLS-1$
         }
-        this.statements.add(statement);
-    }
 
-    @Override
-    public List<Integer> getGeneratedIdList() {
-        return this.generatedIds;
+        Long id = Long.valueOf(0);
+        try (PreparedStatement pstmt = this.conn.prepareStatement(statement.toString(),
+            PreparedStatement.RETURN_GENERATED_KEYS)) {
+
+            for (Map.Entry<Integer, Object> entry : statement.getParameters()
+                .entrySet()) {
+                pstmt.setObject(entry.getKey().intValue(), entry.getValue());
+            }
+
+            this.rowCountResult = pstmt.executeUpdate();
+
+            id = getGeneratedKey(pstmt);
+        } catch (SQLException e) {
+            rollback();
+            throw new PersistenceException(e);
+        }
+
+        this.persistCalled = true;
+        return id;
     }
 
     @Override
@@ -129,44 +160,28 @@ public final class TransactionManagerImpl implements TransactionManager {
     }
 
     /**
-     * Creates a {@link PreparedStatement}, calls the {@link PreparedStatement#executeUpdate()}
-     * and then process the generated keys (if there are any).
-     *
-     * @param conn {@link Connection}
-     * @throws SQLException if a database access error occurs
-     * @see #setGeneratedKeys(PreparedStatement)
-     */
-    private void createStatementAndExecute(Connection conn) throws SQLException {
-        for (SqlStatement statement : this.statements) {
-            try (PreparedStatement pstmt = conn.prepareStatement(statement.getStatement(),
-                PreparedStatement.RETURN_GENERATED_KEYS)) {
-
-                for (Map.Entry<Integer, Object> entry : statement.getParameters()
-                    .entrySet()) {
-                    pstmt.setObject(entry.getKey().intValue(), entry.getValue());
-                }
-
-                this.rowCountResult = pstmt.executeUpdate();
-
-                setGeneratedKeys(pstmt);
-            }
-        }
-    }
-
-    /**
-     * Copies any generated keys from the designated {@code PreparedStatement} to a class member
-     * variable {@code List} which allows can be accessed.
+     * Returns a generated id.
      *
      * @param pstmt {@link PreparedStatement}
+     * @return {@code Long} the generated id, otherwise 0. Cannot be {@code null}.
      * @throws SQLException if a database access error occurs
      */
-    private void setGeneratedKeys(PreparedStatement pstmt) throws SQLException {
+    private Long getGeneratedKey(PreparedStatement pstmt) throws SQLException {
         try (ResultSet rset = pstmt.getGeneratedKeys()) {
-            if (rset.isBeforeFirst()) {
-                while (rset.next()) {
-                    this.generatedIds.add(Integer.valueOf(rset.getInt(1)));
-                }
+            if (rset.isBeforeFirst() && rset.next()) {
+                return Long.valueOf(rset.getInt(1));
             }
+        }
+        return Long.valueOf(0);
+    }
+
+    private void rollback() {
+        try {
+            this.conn.rollback();
+            this.conn.close();
+            this.conn = null;
+        } catch (SQLException e) {
+            LOG.error("Rollback failed: {}", e);
         }
     }
 }

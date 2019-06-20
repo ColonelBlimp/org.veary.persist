@@ -35,12 +35,11 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import org.veary.persist.PersistenceManagerFactory;
 import org.veary.persist.Query;
 import org.veary.persist.QueryManager;
-import org.veary.persist.SqlBuilder;
 import org.veary.persist.SqlStatement;
 import org.veary.persist.TransactionManager;
-import org.veary.persist.internal.GuicePersistModule;
 
 import hthurow.tomcatjndi.TomcatJNDI;
 
@@ -56,9 +55,7 @@ public class QueryTest {
         this.tomcatJndi = new TomcatJNDI();
         this.tomcatJndi.processContextXml(contextXml);
         this.tomcatJndi.start();
-        this.injector = Guice.createInjector(
-            new GuicePersistTestModule(),
-            new GuicePersistModule());
+        this.injector = Guice.createInjector(new GuicePersistTestModule());
     }
 
     @AfterClass
@@ -68,39 +65,43 @@ public class QueryTest {
 
     @Test
     public void createTables() {
-        final TransactionManager txManager = this.injector.getInstance(TransactionManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+
+        final TransactionManager txManager = factory.createTransactionManager();
         Assert.assertNotNull(txManager);
         txManager.begin();
-        SqlBuilder createTableBuilder = SqlBuilder.newInstance(
+        SqlStatement createTable = SqlStatement.newInstance(
             "CREATE TABLE IF NOT EXISTS debs.account(id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255))");
-        SqlStatement createTable = SqlStatement.newInstance(createTableBuilder);
-        txManager.persist(createTable);
+        Long idOne = txManager.persist(createTable);
 
-        SqlBuilder insertAccount = SqlBuilder
+        SqlStatement insertAccountOne = SqlStatement
             .newInstance("INSERT INTO debs.account(name) VALUES(?)");
-        SqlStatement createAccountOne = SqlStatement.newInstance(insertAccount);
-        createAccountOne.setParameter(1, "CASH");
-        txManager.persist(createAccountOne);
+        insertAccountOne.setParameter(1, "CASH");
+        this.id = txManager.persist(insertAccountOne);
 
-        SqlStatement createAccountTwo = SqlStatement.newInstance(insertAccount);
-        createAccountTwo.setParameter(1, "EXPENSE");
-        txManager.persist(createAccountTwo);
+        SqlStatement insertAccountTwo = SqlStatement
+            .newInstance("INSERT INTO debs.account(name) VALUES(?)");
+        insertAccountTwo.setParameter(1, "EXPENSE");
+        Long idThree = txManager.persist(insertAccountTwo);
 
         txManager.commit();
-
-        this.id = Long.valueOf(txManager.getGeneratedIdList().get(0).intValue());
     }
 
     @Test
     public void singleResult() {
-        final QueryManager manager = this.injector.getInstance(QueryManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final QueryManager manager = factory.createQueryManager();
         Assert.assertNotNull(manager);
-        final Query query = manager.createQuery(
-            SqlBuilder.newInstance("SELECT * FROM debs.account WHERE id=?"),
-            Account.class);
+
+        SqlStatement statement = SqlStatement
+            .newInstance("SELECT * FROM debs.account WHERE id=?");
+        statement.setParameter(1, this.id);
+
+        final Query query = manager.createQuery(statement, Account.class);
         Assert.assertNotNull(query);
-        Account account = (Account) query.setParameter(1, this.id).execute()
-            .getSingleResult();
+        Account account = (Account) query.execute().getSingleResult();
 
         Assert.assertNotNull(account);
         Assert.assertEquals(account.getName(), "CASH");
@@ -108,11 +109,14 @@ public class QueryTest {
 
     @Test
     public void resultsList() {
-        final QueryManager manager = this.injector.getInstance(QueryManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final QueryManager manager = factory.createQueryManager();
         Assert.assertNotNull(manager);
-        final Query query = manager.createQuery(
-            SqlBuilder.newInstance("SELECT * FROM debs.account"),
-            Account.class);
+
+        SqlStatement statement = SqlStatement.newInstance("SELECT * FROM debs.account");
+
+        final Query query = manager.createQuery(statement, Account.class);
         Assert.assertNotNull(query);
         List<Object> list = query.execute().getResultList();
         Assert.assertNotNull(list);

@@ -24,12 +24,14 @@
 
 package org.veary.persist.tests;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.jndi.JndiIntegration;
+
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.sql.DataSource;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.jndi.JndiIntegration;
+import org.veary.persist.PersistenceManagerFactory;
 
 public class GuicePersistTestModule extends AbstractModule {
 
@@ -38,5 +40,6 @@ public class GuicePersistTestModule extends AbstractModule {
         bind(Context.class).to(InitialContext.class);
         bind(DataSource.class).toProvider(
             JndiIntegration.fromJndi(DataSource.class, "java:/comp/env/jdbc/debs"));
+        bind(PersistenceManagerFactory.class);
     }
 }

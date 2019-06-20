@@ -22,37 +22,8 @@
  * SOFTWARE.
  */
 
-package org.veary.persist.internal;
+package org.veary.persist;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+public interface CallableManager {
 
-/**
- * Resets {@code Connection#setAutoCommit(boolean)} to its original state. This used with a
- * {@code try-with-resource} syntax.
- *
- * @author Marc L. Veary
- * @since 1.0
- */
-public final class AutoSetAutoCommit implements AutoCloseable {
-
-    private final Connection conn;
-    private final boolean originalAutoCommit;
-
-    /**
-     * Constructor.
-     *
-     * @param conn {@link Connection}
-     * @throws SQLException if there is an error
-     */
-    protected AutoSetAutoCommit(Connection conn) throws SQLException {
-        this.conn = conn;
-        this.originalAutoCommit = conn.getAutoCommit();
-        this.conn.setAutoCommit(false);
-    }
-
-    @Override
-    public void close() throws SQLException {
-        this.conn.setAutoCommit(this.originalAutoCommit);
-    }
 }

@@ -42,6 +42,7 @@ import javax.sql.DataSource;
 
 import org.veary.persist.Query;
 import org.veary.persist.SqlBuilder;
+import org.veary.persist.SqlStatement;
 import org.veary.persist.exceptions.NoResultException;
 import org.veary.persist.exceptions.NonUniqueResultException;
 import org.veary.persist.exceptions.PersistenceException;
@@ -58,9 +59,8 @@ public final class QueryImpl implements Query {
     private static final String ENTITY_FACTORY_METHOD = "newInstance";
 
     private final DataSource ds;
-    private final SqlBuilder builder;
+    private final SqlStatement statement;
     private final Class<?> entityInterface;
-    private final Map<String, Object> parameters;
 
     private List<Map<String, Object>> internalResult;
 
@@ -72,45 +72,37 @@ public final class QueryImpl implements Query {
      * @param entityInterface the interface of a class which is to be created (by Reflection) and
      *     returned as the result(s).
      *
-     *     <p>This interface must define a <b>static method</b> with the signature: <pre>
-     *     newInstance(Map&lt;String, Object&gt;) </pre>
+     *     <p>This interface must define a <b>static method</b> with the signature:
+     *
+     *     <pre>
+     *     newInstance(Map&lt;String, Object&gt;)
+     *     </pre>
      *
      *     <p>Which should validate the input {@code Map} and populate the instance's member
      *     fields.
      */
-    public QueryImpl(DataSource ds, SqlBuilder builder, Class<?> entityInterface) {
+    public QueryImpl(DataSource ds, SqlStatement statement, Class<?> entityInterface) {
         this.ds = Objects.requireNonNull(ds,
             Messages.getString("QueryImpl.error_msg_ds_null")); //$NON-NLS-1$
-        this.builder = Objects.requireNonNull(builder,
-            Messages.getString("QueryImpl.error_msg_builder_null")); //$NON-NLS-1$
+        this.statement = Objects.requireNonNull(statement,
+            Messages.getString("QueryImpl.error_msg_statement_null")); //$NON-NLS-1$
         this.entityInterface = Objects.requireNonNull(entityInterface,
             Messages.getString("QueryImpl.error_msg_iface_null")); //$NON-NLS-1$
-        this.parameters = new HashMap<>();
-    }
-
-    @Override
-    public Query setParameter(int index, Object value) {
-        if (index < 1) {
-            throw new IllegalArgumentException(
-                Messages.getString("QueryImpl.error_msg_invalid_index")); //$NON-NLS-1$
-        }
-        this.parameters.put(String.valueOf(index), Objects.requireNonNull(value,
-            Messages.getString("QueryImpl.error_msg_null_value"))); //$NON-NLS-1$
-        return this;
     }
 
     @Override
     public Query execute() {
-        if (!this.builder.toString().toUpperCase().startsWith(SELECT_STR)) {
+        if (!this.statement.toString().toUpperCase().startsWith(SELECT_STR)) {
             throw new IllegalStateException(
                 Messages.getString("QueryImpl.error_msg_incorrect_query_type")); //$NON-NLS-1$
         }
 
         try (Connection conn = this.ds.getConnection()) {
-            try (PreparedStatement stmt = conn.prepareStatement(this.builder.toString())) {
+            try (PreparedStatement stmt = conn.prepareStatement(this.statement.toString())) {
 
-                for (final Map.Entry<String, Object> param : this.parameters.entrySet()) {
-                    stmt.setObject(Integer.valueOf(param.getKey()), param.getValue());
+                for (final Map.Entry<Integer, Object> param : this.statement.getParameters()
+                    .entrySet()) {
+                    stmt.setObject(param.getKey(), param.getValue());
                 }
 
                 try (ResultSet rset = stmt.executeQuery()) {
@@ -119,7 +111,7 @@ public final class QueryImpl implements Query {
 
             }
         } catch (final SQLException e) {
-            throw new PersistenceException(e);
+            throw new PersistenceException(e.getCause());
         }
 
         return this;
@@ -176,7 +168,7 @@ public final class QueryImpl implements Query {
         while (rset.next()) {
             final Map<String, Object> row = new HashMap<>();
             for (int i = 1; i <= columns; i++) {
-                row.put(md.getColumnName(i).toUpperCase(), rset.getObject(i));
+                row.put(md.getColumnLabel(i).toUpperCase(), rset.getObject(i));
             }
             list.add(row);
         }
@@ -195,7 +187,9 @@ public final class QueryImpl implements Query {
         try {
             return this.entityInterface.getDeclaredMethod(ENTITY_FACTORY_METHOD, Map.class);
         } catch (NoSuchMethodException | SecurityException e) {
-            throw new PersistenceException(e);
+            throw new PersistenceException(
+                String.format("Error accessing %s.newInstance(): %s",
+                    this.entityInterface.getName(), e.getCause()));
         }
     }
 
@@ -211,7 +205,10 @@ public final class QueryImpl implements Query {
             return staticFactory.invoke(this.entityInterface, result);
         } catch (IllegalAccessException | IllegalArgumentException
             | InvocationTargetException e) {
-            throw new PersistenceException(e);
+            throw new PersistenceException(
+                String.format("Error invoking %s.newInstance(): %s",
+                    this.entityInterface.getName(),
+                    e.getCause()));
         }
     }
 }

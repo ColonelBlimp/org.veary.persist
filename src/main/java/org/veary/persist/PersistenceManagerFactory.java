@@ -22,55 +22,65 @@
  * SOFTWARE.
  */
 
-package org.veary.persist.internal;
+package org.veary.persist;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.sql.DataSource;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.veary.persist.internal.QueryManagerImpl;
+import org.veary.persist.internal.TransactionManagerImpl;
 
 /**
- * Automatically rollsback if the transaction has not been committed. This used with a
- * {@code try-with-resource} syntax.
+ * <b>Purpose:</b> factory for all the manager classes.
+ *
+ * <p><b>Notes:</b> annotated for JSR 330
  *
  * @author Marc L. Veary
  * @since 1.0
+ * @see QueryManager
+ * @see TransactionManager
+ * @see CallableManager
  */
-public final class AutoRollback implements AutoCloseable {
+@Singleton
+public final class PersistenceManagerFactory {
 
-    private static final Logger LOG = LogManager.getLogger(AutoRollback.class);
-    private final Connection conn;
-    private boolean committed;
+    private final DataSource ds;
 
     /**
      * Constructor.
      *
-     * @param conn {@code Connection}
+     * @param ds {@code DataSource}
      */
-    protected AutoRollback(Connection conn) {
-        this.conn = conn;
+    @Inject
+    public PersistenceManagerFactory(DataSource ds) {
+        this.ds = ds;
     }
 
     /**
-     * Wrapper around {@link Connection#commit()}.
+     * Returns a new instance of the {@link QueryManager}.
      *
-     * @throws SQLException if there is a problem
+     * @return new instance
      */
-    public void commit() throws SQLException {
-        if (this.conn.getAutoCommit()) {
-            throw new IllegalStateException(
-                "Connection set to auto-commit.");
-        }
-        this.conn.commit();
-        this.committed = true;
+    public QueryManager createQueryManager() {
+        return new QueryManagerImpl(this.ds);
     }
 
-    @Override
-    public void close() throws SQLException {
-        if (!this.committed) {
-            this.conn.rollback();
-            LOG.error("Transaction rolled back.");
-        }
+    /**
+     * Returns a new instance of the {@link TransactionManager}.
+     *
+     * @return new instance
+     */
+    public TransactionManager createTransactionManager() {
+        return new TransactionManagerImpl(this.ds);
+    }
+
+    /**
+     * Returns a new instance of the {@link CallableManager}.
+     *
+     * @return new instance
+     */
+    public CallableManager createCallableManager() {
+        throw new UnsupportedOperationException();
     }
 }

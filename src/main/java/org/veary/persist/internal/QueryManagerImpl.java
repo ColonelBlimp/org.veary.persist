@@ -26,15 +26,14 @@ package org.veary.persist.internal;
 
 import java.util.Objects;
 
-import javax.inject.Inject;
 import javax.sql.DataSource;
 
 import org.veary.persist.Query;
 import org.veary.persist.QueryManager;
-import org.veary.persist.SqlBuilder;
+import org.veary.persist.SqlStatement;
 
 /**
- * Concrete implementation of {@link QueryManager}.
+ * <h2>Purpose:</h2> handles read statements through JDBC.
  *
  * @author Marc L. Veary
  * @since 1.0
@@ -48,16 +47,15 @@ public final class QueryManagerImpl implements QueryManager {
      *
      * @param ds {@link DataSource}
      */
-    @Inject
     public QueryManagerImpl(DataSource ds) {
         this.ds = Objects.requireNonNull(ds,
             Messages.getString("QueryManagerImpl.error_msg_ds_null"));
     }
 
     @Override
-    public Query createQuery(SqlBuilder builder, Class<?> entityInterface) {
-        return new QueryImpl(this.ds, Objects.requireNonNull(builder,
-            Messages.getString("QueryManagerImpl.error_msg_builder_null")),
+    public Query createQuery(SqlStatement statement, Class<?> entityInterface) {
+        return new QueryImpl(this.ds, Objects.requireNonNull(statement,
+            Messages.getString("QueryManagerImpl.error_msg_statement_null")),
             Objects.requireNonNull(entityInterface,
                 Messages.getString("QueryManagerImpl.error_msg_iface_null")));
     }

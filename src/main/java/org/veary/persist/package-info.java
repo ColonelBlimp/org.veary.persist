@@ -23,31 +23,66 @@
  */
 
 /**
- * <h2>Requirements:</h2>
+ * <h1>Introduction:</h1>
  *
- * <ul><li>Google Guice</li></ul>
+ * <p>This library is a very basic wrapper around JDBC particularly providing an easier use of
+ * transactions and automatic rollback functionality.
  *
- * <p>Entity interfaces which have a <b>static factory method</b> with the signature:
- * {@code static [interface] newInstance(Map<String, Object)} which creates an instance of the
- * class.
+ * <h2>Usage:</h2>
+ *
+ * <p>There are three manager available through the {@link PersistenceManagerFactory}
+ *
+ * <ul>
+ *
+ * <li>{@code QueryManager} which handles an SQL query which can return 0 or more results (e.g.
+ * SELECT).</li>
+ *
+ * <li>{@code TransactionManager} which handles a SQL Data Manipulation Language (DML)
+ * statement, such as INSERT, UPDATE or DELETE; or an SQL statement that returns nothing, such
+ * as a DDL statement.</li>
+ *
+ * <li>{@code CallableManager} which handles SQL stored procedures.</li>
+ *
+ * </ul>
+ *
+ * <p>The above managers are accessed through the {@code PersistenceManagerFactory} which is
+ * also annotated with JSR 330 {@code @Inject} and {@code @Singleton} for use with DI
+ * containers. For example, with Google Guice you might have the following:
+ *
+ * <pre>
+ * public class GuiceJndiModule extends AbstractModule {
+ *
+ *     &#64;Override
+ *     protected void configure() {
+ *         bind(Context.class).to(InitialContext.class);
+ *         bind(DataSource.class).toProvider(
+ *             JndiIntegration.fromJndi(DataSource.class, "java:/comp/env/jdbc/name"));
+ *         bind(PersistenceManagerFactory.class);
+ *     }
+ * }
+ * </pre>
+ *
+ * <h2>Entity Interfaces</h2>
+ *
+ * <p>Entity interfaces which use the library <b>must</b> have a <b>static factory method</b>
+ * with the signature: {@code static [interface_name] newInstance(Map<String, Object)} which
+ * creates an instance of the class.
  *
  * <p>For example:
  *
  * <pre>
- *
  * public interface Person {
  *
  *     Long getId();
- *
  *     String getSurname();
- *
  *     String getForename();
  *
- *     static Person newInstance(Map<String, Object> dataMap) {
+ *     static Person newInstance(Map&lt;String, Object&gt; dataMap) {
  *         // do all validation of the Map here
  *         return new Person() {
  *             Long getId() {
- *                 return (Long) dataMap.get("ID"); // Key is the name of the database field
+ *             Object obj = dataMap.get("ID");
+ *                 return (Long) dataMap.get("ID"); // The key is the name of the database field
  *             }
  *
  *             String getSurname() {
@@ -59,28 +94,7 @@
  *         }
  *     }
  * }
- *
  * </pre>
- *
- * <pre>
- *
- * <h2>Usage:</h2>
- *
- * <pre>
- *
- * Injector injector = Guice.createInjector(
- *     ServiceLoader.load(com.google.inject.AbstractModule));
- *
- * QueryManager manager = QueryManager = injector.getInstance(QueryManager.class);
- *
- * Query query = manager.createQuery(
- *     SqlBuilder.newInstance("SELECT * FROM person WHERE id=?"),
- *     Person.class);
- * Person person = (Person) query
- *     .setParameter(1, Long.valueOf(10))
- *     .execute()
- *     .getSingleResult();
- * </pre>
- *
  */
+
 package org.veary.persist;

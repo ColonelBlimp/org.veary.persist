@@ -22,18 +22,24 @@
  * SOFTWARE.
  */
 
-package org.veary.persist.internal;
+package org.veary.persist.tests;
 
-import com.google.inject.AbstractModule;
+import org.testng.annotations.Test;
+import org.veary.persist.SqlStatement;
 
-import org.veary.persist.QueryManager;
-import org.veary.persist.TransactionManager;
+public class SqlStatementTest {
 
-public final class GuicePersistModule extends AbstractModule {
+    @Test(
+        expectedExceptions = NullPointerException.class,
+        expectedExceptionsMessageRegExp = "String parameter cannot be null.")
+    public void nullParameterException() {
+        SqlStatement.newInstance(null);
+    }
 
-    @Override
-    protected void configure() {
-        bind(QueryManager.class).to(QueryManagerImpl.class);
-        bind(TransactionManager.class).to(TransactionManagerImpl.class);
+    @Test(
+        expectedExceptions = IllegalArgumentException.class,
+        expectedExceptionsMessageRegExp = "String parameter must be non-empty.")
+    public void emptyParameterException() {
+        SqlStatement.newInstance("");
     }
 }

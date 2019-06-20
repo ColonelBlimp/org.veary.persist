@@ -24,19 +24,19 @@
 
 package org.veary.persist.tests;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
 import java.io.File;
 
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import org.veary.persist.PersistenceManagerFactory;
 import org.veary.persist.QueryManager;
-import org.veary.persist.SqlBuilder;
-import org.veary.persist.internal.GuicePersistModule;
+import org.veary.persist.SqlStatement;
 import org.veary.persist.internal.QueryManagerImpl;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 import hthurow.tomcatjndi.TomcatJNDI;
 
@@ -52,8 +52,7 @@ public class QueryManagerTest {
         this.tomcatJndi.processContextXml(contextXml);
         this.tomcatJndi.start();
         this.injector = Guice.createInjector(
-            new GuicePersistTestModule(),
-            new GuicePersistModule());
+            new GuicePersistTestModule());
     }
 
     @AfterClass
@@ -63,11 +62,13 @@ public class QueryManagerTest {
 
     @Test
     public void createQuery() {
-        final QueryManager manager = this.injector.getInstance(QueryManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final QueryManager manager = factory.createQueryManager();
         Assert.assertNotNull(manager);
 
         Assert.assertNotNull(
-            manager.createQuery(SqlBuilder.newInstance("SELECT * FROM ?"), String.class));
+            manager.createQuery(SqlStatement.newInstance("SELECT * FROM ?"), String.class));
     }
 
     @Test(
@@ -79,9 +80,11 @@ public class QueryManagerTest {
 
     @Test(
         expectedExceptions = NullPointerException.class,
-        expectedExceptionsMessageRegExp = "SqlBuilder parameter is null.")
+        expectedExceptionsMessageRegExp = "SqlStatement parameter is null.")
     public void queryManagerNullBuilder() {
-        final QueryManager manager = this.injector.getInstance(QueryManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final QueryManager manager = factory.createQueryManager();
         Assert.assertNotNull(manager);
         manager.createQuery(null, null);
     }
@@ -90,8 +93,10 @@ public class QueryManagerTest {
         expectedExceptions = NullPointerException.class,
         expectedExceptionsMessageRegExp = "Class interface parameter is null.")
     public void queryManagerNullInterface() {
-        final QueryManager manager = this.injector.getInstance(QueryManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final QueryManager manager = factory.createQueryManager();
         Assert.assertNotNull(manager);
-        manager.createQuery(SqlBuilder.newInstance("SELECT * FROM ?"), null);
+        manager.createQuery(SqlStatement.newInstance("SELECT * FROM ?"), null);
     }
 }

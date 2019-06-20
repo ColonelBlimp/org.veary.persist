@@ -33,10 +33,9 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import org.veary.persist.SqlBuilder;
+import org.veary.persist.PersistenceManagerFactory;
 import org.veary.persist.SqlStatement;
 import org.veary.persist.TransactionManager;
-import org.veary.persist.internal.GuicePersistModule;
 
 import hthurow.tomcatjndi.TomcatJNDI;
 
@@ -52,8 +51,7 @@ public class TransactionManagerTest {
         this.tomcatJndi.processContextXml(contextXml);
         this.tomcatJndi.start();
         this.injector = Guice.createInjector(
-            new GuicePersistTestModule(),
-            new GuicePersistModule());
+            new GuicePersistTestModule());
     }
 
     @AfterClass
@@ -63,40 +61,44 @@ public class TransactionManagerTest {
 
     @Test
     public void processTransaction() {
-        final TransactionManager manager = this.injector.getInstance(TransactionManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final TransactionManager manager = factory.createTransactionManager();
         Assert.assertNotNull(manager);
 
-        manager.begin();
-
-        SqlBuilder createTableBuilder = SqlBuilder.newInstance(
+        SqlStatement createTable = SqlStatement.newInstance(
             "CREATE TABLE IF NOT EXISTS debs.account(id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255))");
-        SqlStatement createTable = SqlStatement.newInstance(createTableBuilder);
-        manager.persist(createTable);
+        manager.begin();
+        Long result = manager.persist(createTable);
+        Assert.assertEquals(result, Long.valueOf(0));
         manager.commit();
 
         manager.begin();
 
-        SqlBuilder insertAccount = SqlBuilder
+        SqlStatement createAccountOne = SqlStatement
             .newInstance("INSERT INTO debs.account(name) VALUES(?)");
-        SqlStatement createAccountOne = SqlStatement.newInstance(insertAccount);
         createAccountOne.setParameter(1, "CASH");
-        manager.persist(createAccountOne);
+        result = manager.persist(createAccountOne);
+        Assert.assertTrue(result > 0);
 
-        SqlStatement createAccountTwo = SqlStatement.newInstance(insertAccount);
+        SqlStatement createAccountTwo = SqlStatement
+            .newInstance("INSERT INTO debs.account(name) VALUES(?)");
         createAccountTwo.setParameter(1, "EXPENSE");
-        manager.persist(createAccountTwo);
+        result = manager.persist(createAccountTwo);
+        Assert.assertTrue(result > 0);
 
         manager.commit();
 
         Assert.assertTrue(manager.getRowCount() == 1);
-        Assert.assertTrue(manager.getGeneratedIdList().size() == 2);
     }
 
     @Test(
         expectedExceptions = IllegalStateException.class,
         expectedExceptionsMessageRegExp = "No active transaction.")
     public void exceptionCommitBeforeBegin() {
-        final TransactionManager manager = this.injector.getInstance(TransactionManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final TransactionManager manager = factory.createTransactionManager();
         Assert.assertNotNull(manager);
         manager.persist(null);
     }
@@ -105,7 +107,9 @@ public class TransactionManagerTest {
         expectedExceptions = NullPointerException.class,
         expectedExceptionsMessageRegExp = "Statement cannot be null.")
     public void exceptionNullStatement() {
-        final TransactionManager manager = this.injector.getInstance(TransactionManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final TransactionManager manager = factory.createTransactionManager();
         Assert.assertNotNull(manager);
         manager.begin();
         manager.persist(null);
@@ -114,7 +118,9 @@ public class TransactionManagerTest {
     @Test(expectedExceptions = IllegalStateException.class,
         expectedExceptionsMessageRegExp = "Transaction already active.")
     public void activeTransactionException() {
-        final TransactionManager manager = this.injector.getInstance(TransactionManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final TransactionManager manager = factory.createTransactionManager();
         Assert.assertNotNull(manager);
         manager.begin();
         manager.begin();
@@ -123,7 +129,9 @@ public class TransactionManagerTest {
     @Test(expectedExceptions = IllegalStateException.class,
         expectedExceptionsMessageRegExp = "No active transaction.")
     public void commitTxNotActiveException() {
-        final TransactionManager manager = this.injector.getInstance(TransactionManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final TransactionManager manager = factory.createTransactionManager();
         Assert.assertNotNull(manager);
         manager.commit();
     }
@@ -131,7 +139,9 @@ public class TransactionManagerTest {
     @Test(expectedExceptions = IllegalStateException.class,
         expectedExceptionsMessageRegExp = "Nothing to commit.")
     public void noStatementsException() {
-        final TransactionManager manager = this.injector.getInstance(TransactionManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final TransactionManager manager = factory.createTransactionManager();
         Assert.assertNotNull(manager);
         manager.begin();
         manager.commit();
@@ -141,11 +151,12 @@ public class TransactionManagerTest {
         expectedExceptions = IllegalStateException.class,
         expectedExceptionsMessageRegExp = "Incorrect query type.")
     public void typeException() {
-        final TransactionManager manager = this.injector.getInstance(TransactionManager.class);
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final TransactionManager manager = factory.createTransactionManager();
         Assert.assertNotNull(manager);
         manager.begin();
-        SqlBuilder select = SqlBuilder.newInstance("SELECT * FROM debs.account");
-        SqlStatement find = SqlStatement.newInstance(select);
+        SqlStatement find = SqlStatement.newInstance("SELECT * FROM debs.account");
         manager.persist(find);
     }
 }
