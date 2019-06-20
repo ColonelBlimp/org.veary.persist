@@ -30,7 +30,7 @@
  *
  * <h2>Usage:</h2>
  *
- * <p>There are three manager available for different types of SQL.
+ * <p>There are three manager available through the {@link PersistenceManagerFactory}
  *
  * <ul>
  *
@@ -46,8 +46,8 @@
  * </ul>
  *
  * <p>The above managers are accessed through the {@code PersistenceManagerFactory} which is
- * also annotated with {@code @Inject} and {@code @Singleton} for use with DI containers. For
- * example, with Google Guice you might have the following:
+ * also annotated with JSR 330 {@code @Inject} and {@code @Singleton} for use with DI
+ * containers. For example, with Google Guice you might have the following:
  *
  * <pre>
  * public class GuiceJndiModule extends AbstractModule {

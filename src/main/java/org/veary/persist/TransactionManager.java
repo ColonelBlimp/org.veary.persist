@@ -24,6 +24,12 @@
 
 package org.veary.persist;
 
+/**
+ * <b>Purpose:</b> defines the method for using JDBC transactions.
+ *
+ * @author Marc L. Veary
+ * @since 1.0
+ */
 public interface TransactionManager {
 
     /**
