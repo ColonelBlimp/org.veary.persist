@@ -24,9 +24,6 @@
 
 package org.veary.persist.tests;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-
 import java.io.File;
 
 import org.testng.Assert;
@@ -37,6 +34,9 @@ import org.veary.persist.PersistenceManagerFactory;
 import org.veary.persist.QueryManager;
 import org.veary.persist.SqlStatement;
 import org.veary.persist.internal.QueryManagerImpl;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 import hthurow.tomcatjndi.TomcatJNDI;
 
@@ -61,7 +61,7 @@ public class QueryManagerTest {
     }
 
     @Test
-    public void createQuery() {
+    public void createQueryWithEntityClass() {
         final PersistenceManagerFactory factory = this.injector
             .getInstance(PersistenceManagerFactory.class);
         final QueryManager manager = factory.createQueryManager();
@@ -69,6 +69,17 @@ public class QueryManagerTest {
 
         Assert.assertNotNull(
             manager.createQuery(SqlStatement.newInstance("SELECT * FROM ?"), String.class));
+    }
+
+    @Test
+    public void createQueryNoEntityClass() {
+        final PersistenceManagerFactory factory = this.injector
+            .getInstance(PersistenceManagerFactory.class);
+        final QueryManager manager = factory.createQueryManager();
+        Assert.assertNotNull(manager);
+
+        Assert.assertNotNull(
+            manager.createQuery(SqlStatement.newInstance("SELECT * FROM ?")));
     }
 
     @Test(

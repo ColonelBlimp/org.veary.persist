@@ -59,4 +59,10 @@ public final class QueryManagerImpl implements QueryManager {
             Objects.requireNonNull(entityInterface,
                 Messages.getString("QueryManagerImpl.error_msg_iface_null")));
     }
+
+    @Override
+    public Query createQuery(SqlStatement statement) {
+        return new QueryImpl(this.ds, Objects.requireNonNull(statement,
+            Messages.getString("QueryManagerImpl.error_msg_statement_null")));
+    }
 }
