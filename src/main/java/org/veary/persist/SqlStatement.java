@@ -56,6 +56,13 @@ public interface SqlStatement {
     Map<Integer, Object> getParameters();
 
     /**
+     * Clears all previously set parameters.
+     *
+     * @return the value of the {@code SqlStatement} itself
+     */
+    SqlStatement clearParameters();
+
+    /**
      * Static factory method for creating instances of this interface.
      *
      * @param statement DML/DDL statement with zero or more IN parameters
@@ -95,6 +102,12 @@ public interface SqlStatement {
             @Override
             public Map<Integer, Object> getParameters() {
                 return Collections.unmodifiableMap(this.params);
+            }
+
+            @Override
+            public SqlStatement clearParameters() {
+                this.params = new HashMap<>();
+                return this;
             }
         };
     }
