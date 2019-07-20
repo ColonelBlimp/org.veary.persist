@@ -29,9 +29,11 @@ public interface QueryManager {
     /**
      * Creates a {@code Query}.
      *
-     * @param builder {@link SqlBuilder}
+     * @param builder         {@link SqlBuilder}
      * @param entityInterface the interface of the entity to be returned
      * @return an instance of a {@link Query} object
      */
     Query createQuery(SqlStatement statement, Class<?> entityInterface);
+
+    Query createQuery(SqlStatement statement);
 }

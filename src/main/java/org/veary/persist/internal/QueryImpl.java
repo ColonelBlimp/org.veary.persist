@@ -41,7 +41,6 @@ import java.util.Objects;
 import javax.sql.DataSource;
 
 import org.veary.persist.Query;
-import org.veary.persist.SqlBuilder;
 import org.veary.persist.SqlStatement;
 import org.veary.persist.exceptions.NoResultException;
 import org.veary.persist.exceptions.NonUniqueResultException;
@@ -60,26 +59,29 @@ public final class QueryImpl implements Query {
 
     private final DataSource ds;
     private final SqlStatement statement;
-    private final Class<?> entityInterface;
+    private Class<?> entityInterface;
 
     private List<Map<String, Object>> internalResult;
 
     /**
      * Constructor.
      *
-     * @param ds {@link DataSource}
-     * @param builder {@link SqlBuilder}
-     * @param entityInterface the interface of a class which is to be created (by Reflection) and
-     *     returned as the result(s).
+     * @param ds              {@link DataSource}
+     * @param statement       {@link SqlStatement}
+     * @param entityInterface the interface of a class which is to be created (by
+     *                        Reflection) and returned as the result(s).
      *
-     *     <p>This interface must define a <b>static method</b> with the signature:
+     *                        <p>
+     *                        This interface must define a <b>static method</b> with
+     *                        the signature:
      *
-     *     <pre>
+     *                        <pre>
      *     newInstance(Map&lt;String, Object&gt;)
-     *     </pre>
+     *                        </pre>
      *
-     *     <p>Which should validate the input {@code Map} and populate the instance's member
-     *     fields.
+     *                        <p>
+     *                        Which should validate the input {@code Map} and
+     *                        populate the instance's member fields.
      */
     public QueryImpl(DataSource ds, SqlStatement statement, Class<?> entityInterface) {
         this.ds = Objects.requireNonNull(ds,
@@ -88,6 +90,19 @@ public final class QueryImpl implements Query {
             Messages.getString("QueryImpl.error_msg_statement_null")); //$NON-NLS-1$
         this.entityInterface = Objects.requireNonNull(entityInterface,
             Messages.getString("QueryImpl.error_msg_iface_null")); //$NON-NLS-1$
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param ds        {@link DataSource}
+     * @param statement {@link SqlStatement}
+     */
+    public QueryImpl(DataSource ds, SqlStatement statement) {
+        this.ds = Objects.requireNonNull(ds,
+            Messages.getString("QueryImpl.error_msg_ds_null")); //$NON-NLS-1$
+        this.statement = Objects.requireNonNull(statement,
+            Messages.getString("QueryImpl.error_msg_statement_null")); //$NON-NLS-1$
     }
 
     @Override
@@ -132,6 +147,11 @@ public final class QueryImpl implements Query {
                 Messages.getString("QueryImpl.error_msg_too_many_results")); //$NON-NLS-1$
         }
 
+        if (this.entityInterface == null) {
+            Map<String, Object> result = this.internalResult.get(0);
+            return result.values().toArray()[0];
+        }
+
         return getNewInstance(getStaticFactoryMethod(), this.internalResult.get(0));
     }
 
@@ -140,6 +160,10 @@ public final class QueryImpl implements Query {
         if (this.internalResult == null) {
             throw new PersistenceException(
                 Messages.getString("QueryImpl.error_msg_method_sequence")); //$NON-NLS-1$
+        }
+
+        if (this.entityInterface == null) {
+            throw new UnsupportedOperationException();
         }
 
         final List<Object> list = new ArrayList<>(this.internalResult.size());
@@ -151,11 +175,12 @@ public final class QueryImpl implements Query {
     }
 
     /**
-     * Process the given {@link ResultSet} into an {@code List<Map<String, Object>>}.
+     * Process the given {@link ResultSet} into an
+     * {@code List<Map<String, Object>>}.
      *
      * @param rset {@code ResultSet}
      * @return a {@code List<Map<String, Object>>}. Cannot return {@code null}.
-     * @throws SQLException if a database access error occurs
+     * @throws SQLException      if a database access error occurs
      * @throws NoResultException if this {@code Query} did not return any results
      */
     private List<Map<String, Object>> processResultSet(ResultSet rset) throws SQLException {
@@ -180,9 +205,9 @@ public final class QueryImpl implements Query {
     }
 
     /**
-     * Ensures that the Constructor declared {@code Class<?> entityInterface} parameter has a
-     * declared <b>static method</b> named <b>newInstance</b> and takes a single parameter of type
-     * {@code Map}.
+     * Ensures that the Constructor declared {@code Class<?> entityInterface}
+     * parameter has a declared <b>static method</b> named <b>newInstance</b> and
+     * takes a single parameter of type {@code Map}.
      *
      * @return {@link Method}
      */
@@ -201,7 +226,7 @@ public final class QueryImpl implements Query {
      * Invokes the method returned by {@link #getStaticFactoryMethod()}.
      *
      * @param staticFactory {@link Method}
-     * @param result {@code Map} result from the query
+     * @param result        {@code Map} result from the query
      * @return {@link Object}
      */
     private Object getNewInstance(Method staticFactory, Map<String, Object> result) {
