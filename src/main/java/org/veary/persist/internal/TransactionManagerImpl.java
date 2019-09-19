@@ -190,7 +190,7 @@ public final class TransactionManagerImpl implements TransactionManager {
             this.conn.close();
             this.conn = null;
         } catch (SQLException e) {
-            LOG.error("Rollback failed: {}", e);
+            LOG.error("Rollback failed: ", e);
         }
     }
 }
