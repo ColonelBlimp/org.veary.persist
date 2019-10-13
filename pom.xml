@@ -373,4 +373,12 @@
     <tag>HEAD</tag>
   </scm>
 
+  <distributionManagement>
+    <repository>
+      <id>github</id>
+      <name>GitHub ColonelBlimp Apache Maven Packages</name>
+      <url>https://maven.pkg.github.com/ColonelBlimp/persist</url>
+    </repository>
+  </distributionManagement>
+
 </project>
