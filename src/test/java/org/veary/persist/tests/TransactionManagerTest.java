@@ -79,13 +79,13 @@ public class TransactionManagerTest {
             .newInstance("INSERT INTO debs.account(name) VALUES(?)");
         createAccountOne.setParameter(1, "CASH");
         result = manager.persist(createAccountOne);
-        Assert.assertTrue(result > 0);
+        Assert.assertTrue(result.longValue() > 0);
 
         SqlStatement createAccountTwo = SqlStatement
             .newInstance("INSERT INTO debs.account(name) VALUES(?)");
         createAccountTwo.setParameter(1, "EXPENSE");
         result = manager.persist(createAccountTwo);
-        Assert.assertTrue(result > 0);
+        Assert.assertTrue(result.longValue() > 0);
 
         manager.commit();
 

@@ -66,22 +66,19 @@ public final class QueryImpl implements Query {
     /**
      * Constructor.
      *
-     * @param ds              {@link DataSource}
-     * @param statement       {@link SqlStatement}
-     * @param entityInterface the interface of a class which is to be created (by
-     *                        Reflection) and returned as the result(s).
+     * @param ds {@link DataSource}
+     * @param statement {@link SqlStatement}
+     * @param entityInterface the interface of a class which is to be created (by Reflection)
+     *     and returned as the result(s).
      *
-     *                        <p>
-     *                        This interface must define a <b>static method</b> with
-     *                        the signature:
+     *     <p> This interface must define a <b>static method</b> with the signature:
      *
-     *                        <pre>
+     *     <pre>
      *     newInstance(Map&lt;String, Object&gt;)
-     *                        </pre>
+     *     </pre>
      *
-     *                        <p>
-     *                        Which should validate the input {@code Map} and
-     *                        populate the instance's member fields.
+     *     <p> Which should validate the input {@code Map} and populate the instance's member
+     *     fields.
      */
     public QueryImpl(DataSource ds, SqlStatement statement, Class<?> entityInterface) {
         this.ds = Objects.requireNonNull(ds,
@@ -95,7 +92,7 @@ public final class QueryImpl implements Query {
     /**
      * Constructor.
      *
-     * @param ds        {@link DataSource}
+     * @param ds {@link DataSource}
      * @param statement {@link SqlStatement}
      */
     public QueryImpl(DataSource ds, SqlStatement statement) {
@@ -117,7 +114,7 @@ public final class QueryImpl implements Query {
 
                 for (final Map.Entry<Integer, Object> param : this.statement.getParameters()
                     .entrySet()) {
-                    stmt.setObject(param.getKey(), param.getValue());
+                    stmt.setObject(param.getKey().intValue(), param.getValue());
                 }
 
                 try (ResultSet rset = stmt.executeQuery()) {
@@ -175,12 +172,11 @@ public final class QueryImpl implements Query {
     }
 
     /**
-     * Process the given {@link ResultSet} into an
-     * {@code List<Map<String, Object>>}.
+     * Process the given {@link ResultSet} into an {@code List<Map<String, Object>>}.
      *
      * @param rset {@code ResultSet}
      * @return a {@code List<Map<String, Object>>}. Cannot return {@code null}.
-     * @throws SQLException      if a database access error occurs
+     * @throws SQLException if a database access error occurs
      * @throws NoResultException if this {@code Query} did not return any results
      */
     private List<Map<String, Object>> processResultSet(ResultSet rset) throws SQLException {
@@ -205,9 +201,9 @@ public final class QueryImpl implements Query {
     }
 
     /**
-     * Ensures that the Constructor declared {@code Class<?> entityInterface}
-     * parameter has a declared <b>static method</b> named <b>newInstance</b> and
-     * takes a single parameter of type {@code Map}.
+     * Ensures that the Constructor declared {@code Class<?> entityInterface} parameter has a
+     * declared <b>static method</b> named <b>newInstance</b> and takes a single parameter of
+     * type {@code Map}.
      *
      * @return {@link Method}
      */
@@ -226,7 +222,7 @@ public final class QueryImpl implements Query {
      * Invokes the method returned by {@link #getStaticFactoryMethod()}.
      *
      * @param staticFactory {@link Method}
-     * @param result        {@code Map} result from the query
+     * @param result {@code Map} result from the query
      * @return {@link Object}
      */
     private Object getNewInstance(Method staticFactory, Map<String, Object> result) {

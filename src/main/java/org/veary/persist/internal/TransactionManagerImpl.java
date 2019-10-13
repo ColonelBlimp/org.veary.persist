@@ -62,7 +62,7 @@ import org.veary.persist.exceptions.PersistenceException;
 public final class TransactionManagerImpl implements TransactionManager {
 
     private static final Logger LOG = LogManager.getLogger(TransactionManagerImpl.class);
-    private static final String SELECT_STR = "SELECT";
+    private static final String SELECT_STR = "SELECT"; //$NON-NLS-1$
 
     private final DataSource ds;
     private boolean txActive;
@@ -166,6 +166,11 @@ public final class TransactionManagerImpl implements TransactionManager {
     @Override
     public int getRowCount() {
         return this.rowCountResult;
+    }
+
+    @Override
+    public boolean isActive() {
+        return this.txActive;
     }
 
     /**
