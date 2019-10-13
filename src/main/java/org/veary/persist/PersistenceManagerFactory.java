@@ -60,7 +60,7 @@ public final class PersistenceManagerFactory {
     /**
      * Returns a new instance of the {@link QueryManager}.
      *
-     * @return new instance
+     * @return new instance of {@link QueryManager}
      */
     public QueryManager createQueryManager() {
         return new QueryManagerImpl(this.ds);
@@ -69,7 +69,7 @@ public final class PersistenceManagerFactory {
     /**
      * Returns a new instance of the {@link TransactionManager}.
      *
-     * @return new instance
+     * @return new instance of {@link TransactionManager}
      */
     public TransactionManager createTransactionManager() {
         return new TransactionManagerImpl(this.ds);
@@ -78,7 +78,7 @@ public final class PersistenceManagerFactory {
     /**
      * Returns a new instance of the {@link CallableManager}.
      *
-     * @return new instance
+     * @return new instance of {@link CallableManager}
      */
     public CallableManager createCallableManager() {
         throw new UnsupportedOperationException();

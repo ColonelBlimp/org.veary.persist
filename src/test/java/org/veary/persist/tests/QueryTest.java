@@ -72,18 +72,19 @@ public class QueryTest {
         Assert.assertNotNull(txManager);
         txManager.begin();
         SqlStatement createTable = SqlStatement.newInstance(
-            "CREATE TABLE IF NOT EXISTS debs.account(id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255))");
+            "CREATE TABLE IF NOT EXISTS DEBS.ACCOUNT(ID INT PRIMARY KEY AUTO_INCREMENT, NAME VARCHAR(255))");
         Long idOne = txManager.persist(createTable);
         Assert.assertNotNull(idOne);
-        Assert.assertTrue(idOne.longValue() > 0);
+        Assert.assertTrue(idOne.longValue() == 0);
 
         SqlStatement insertAccountOne = SqlStatement
-            .newInstance("INSERT INTO debs.account(name) VALUES(?)");
+            .newInstance("INSERT INTO DEBS.ACCOUNT(NAME) VALUES(?)");
         insertAccountOne.setParameter(1, "CASH");
         this.id = txManager.persist(insertAccountOne);
+        Assert.assertTrue(this.id.longValue() > 0);
 
         SqlStatement insertAccountTwo = SqlStatement
-            .newInstance("INSERT INTO debs.account(name) VALUES(?)");
+            .newInstance("INSERT INTO DEBS.ACCOUNT(NAME) VALUES(?)");
         insertAccountTwo.setParameter(1, "EXPENSE");
         Long idThree = txManager.persist(insertAccountTwo);
         Assert.assertNotNull(idThree);
@@ -100,7 +101,7 @@ public class QueryTest {
         Assert.assertNotNull(manager);
 
         SqlStatement statement = SqlStatement
-            .newInstance("SELECT * FROM debs.account WHERE id=?");
+            .newInstance("SELECT * FROM DEBS.ACCOUNT WHERE ID=?");
         statement.setParameter(1, this.id);
 
         final Query query = manager.createQuery(statement, Account.class);
@@ -118,7 +119,7 @@ public class QueryTest {
         final QueryManager manager = factory.createQueryManager();
         Assert.assertNotNull(manager);
 
-        SqlStatement statement = SqlStatement.newInstance("SELECT * FROM debs.account");
+        SqlStatement statement = SqlStatement.newInstance("SELECT * FROM DEBS.ACCOUNT");
 
         final Query query = manager.createQuery(statement, Account.class);
         Assert.assertNotNull(query);
