@@ -24,6 +24,14 @@
 
 package org.veary.persist;
 
+/**
+ * <b>Purpose:</b> Defines the methods for using stored procedures.
+ *
+ * <p><b>Responsibility:</b>
+ *
+ * @author Marc L. Veary
+ * @since 1.0
+ */
 public interface CallableManager {
 
 }
