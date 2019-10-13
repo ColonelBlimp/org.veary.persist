@@ -74,6 +74,8 @@ public class QueryTest {
         SqlStatement createTable = SqlStatement.newInstance(
             "CREATE TABLE IF NOT EXISTS debs.account(id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255))");
         Long idOne = txManager.persist(createTable);
+        Assert.assertNotNull(idOne);
+        Assert.assertTrue(idOne.longValue() > 0);
 
         SqlStatement insertAccountOne = SqlStatement
             .newInstance("INSERT INTO debs.account(name) VALUES(?)");
@@ -84,6 +86,8 @@ public class QueryTest {
             .newInstance("INSERT INTO debs.account(name) VALUES(?)");
         insertAccountTwo.setParameter(1, "EXPENSE");
         Long idThree = txManager.persist(insertAccountTwo);
+        Assert.assertNotNull(idThree);
+        Assert.assertTrue(idThree.longValue() > 0);
 
         txManager.commit();
     }

@@ -57,4 +57,11 @@ public interface TransactionManager {
      * @return int
      */
     int getRowCount();
+
+    /**
+     * Tests if there is a currently active transaction.
+     *
+     * @return {@code true} if there is a currently active transaction, otherwise {@code false}
+     */
+    boolean isActive();
 }
