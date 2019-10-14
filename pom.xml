@@ -372,7 +372,6 @@
     <url>scm:git:git@github.com:ColonelBlimp/org.veary.persist.git</url>
     <tag>HEAD</tag>
   </scm>
-
   <!-- distributionManagement>
     <repository>
       <id>github</id>
@@ -380,5 +379,4 @@
       <url>https://maven.pkg.github.com/ColonelBlimp</url>
     </repository>
   </distributionManagement -->
-
 </project>
